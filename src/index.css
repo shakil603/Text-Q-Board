@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+/* Custom glow and glass utilities for Text Q Board matching uploaded logo */
+.cyber-glow {
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.key-glow-active {
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.7), inset 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+.glass-pill {
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 60%, #cbd5e1 100%);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35), inset 0 1px 1px #ffffff;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}

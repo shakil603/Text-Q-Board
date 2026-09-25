@@ -1,0 +1,6 @@
+{
+  "name": "Text Q Board",
+  "description": "An exact replica of Gboard featuring worldwide multilingual support, cyber-cyan neon themes, gesture glide typing, voice typing, clipboard manager, text editing tool, and emoji kitchen.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
