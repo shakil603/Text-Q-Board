@@ -361,6 +361,16 @@ export default function App() {
 
         {/* Zone 3: Primary Action */}
         <div className="flex items-center gap-2">
+          <a
+            href="https://github.com/shakil603/Text-Q-Board/actions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-xl bg-slate-800 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-950 font-bold text-xs flex items-center gap-1.5 transition-all"
+            title="Download Android APK from GitHub Actions"
+          >
+            <Download className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">Build & Get APK</span>
+          </a>
           <button
             onClick={() => setIsSettingsModalOpen(true)}
             className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 hover:brightness-110 active:scale-95 shadow-[0_0_12px_rgba(6,182,212,0.4)]"

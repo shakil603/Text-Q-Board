@@ -1,0 +1,91 @@
+name: Build Text Q Board Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Dependencies
+        run: |
+          npm install --legacy-peer-deps
+
+      - name: Build Web Application
+        run: |
+          npm run build
+
+      - name: Initialize Capacitor Android
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          npx cap sync android
+
+      - name: Grant Execute Permission for Gradle
+        run: |
+          if [ -f "android/gradlew" ]; then
+            chmod +x android/gradlew
+          fi
+
+      - name: Build Debug APK with Gradle
+        working-directory: ./android
+        run: |
+          ./gradlew assembleDebug
+
+      - name: Find and Rename APK
+        run: |
+          mkdir -p build-output
+          find android/app/build/outputs/apk/debug/ -name "*.apk" -exec cp {} build-output/Text-Q-Board-Debug.apk \;
+          echo "APK successfully prepared in build-output/"
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Text-Q-Board-Android-APK
+          path: build-output/Text-Q-Board-Debug.apk
+          retention-days: 30
+
+      - name: Create Release with APK (On Push to Main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Text Q Board Android APK v1.0.${{ github.run_number }}
+          body: |
+            ### 📱 Text Q Board Android APK Release
+            - **App Name**: Text Q Board
+            - **Package**: `com.textqboard.app`
+            - **Build Number**: ${{ github.run_number }}
+            - **Features**: Complete Gboard replica with Bangla Phonetic, Cyber Cyan Theme, Glide Typing, Voice Typing, and Emoji Kitchen.
+          files: build-output/Text-Q-Board-Debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true

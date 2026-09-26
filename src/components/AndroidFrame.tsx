@@ -490,13 +490,42 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
           </div>
         )}
 
-        {/* APP 5: ANDROID SETUP GUIDE */}
+        {/* APP 5: ANDROID SETUP GUIDE & APK DOWNLOAD */}
         {activeApp === 'setup_guide' && (
           <div className="flex-1 space-y-3 text-xs text-slate-200 overflow-y-auto pr-1">
             <div className="text-center space-y-1">
               <TextQBoardLogo size="sm" />
-              <h3 className="font-bold text-sm text-white mt-2">How to Enable Text Q Board on Android</h3>
-              <p className="text-[11px] text-cyan-300">Official Installation & Configuration Guide</p>
+              <h3 className="font-bold text-sm text-white mt-2">Text Q Board Android APK & Setup</h3>
+              <p className="text-[11px] text-cyan-300">GitHub Actions CI/CD Automated Build</p>
+            </div>
+
+            {/* GitHub Actions APK Build Card */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/80 via-slate-900 to-slate-950 border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.25)] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-cyan-300 font-bold">
+                  <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
+                  <span>GitHub Automated APK Build</span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Workflow Ready</span>
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Your repository <b className="text-cyan-200">shakil603/Text-Q-Board</b> contains the automated workflow <code className="text-cyan-300 bg-black/40 px-1 py-0.5 rounded">.github/workflows/build-apk.yml</code>. Whenever you push to GitHub or trigger the workflow, GitHub Actions automatically builds the Android APK.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                <a
+                  href="https://github.com/shakil603/Text-Q-Board/actions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.4)] hover:brightness-110 active:scale-95 transition-all"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Open GitHub Actions & Download APK</span>
+                </a>
+              </div>
             </div>
 
             <div className="space-y-2 mt-2">

@@ -1,0 +1,10 @@
+{
+  "appId": "com.textqboard.app",
+  "appName": "Text Q Board",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#0b1320"
+  }
+}
