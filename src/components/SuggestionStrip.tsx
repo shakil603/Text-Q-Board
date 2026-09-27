@@ -1,15 +1,14 @@
 import React from 'react';
-import { 
-  Menu, 
-  Mic, 
-  Languages, 
-  Clipboard, 
-  Palette, 
-  Settings, 
-  Move, 
-  Smartphone, 
-  Wand2, 
-  Smile, 
+import {
+  Mic,
+  Languages,
+  Clipboard,
+  Palette,
+  Settings,
+  Move,
+  Smartphone,
+  Wand2,
+  Smile,
   ChevronLeft,
   ChevronDown,
   EyeOff
@@ -27,10 +26,8 @@ interface SuggestionStripProps {
   theme: ThemeConfig;
   incognito?: boolean;
   isTranslating?: boolean;
-  onToggleIncognito?: () => void;
   onToggleFloating?: () => void;
   onToggleOneHanded?: () => void;
-  currentLanguageName?: string;
 }
 
 export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
@@ -47,87 +44,151 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
 }) => {
   const isMenuOpen = activeToolbarView === 'more_tools';
 
+  const handleToggleMenu = () => {
+    if (activeToolbarView !== 'normal') {
+      setActiveToolbarView('normal');
+    } else {
+      setActiveToolbarView('more_tools');
+    }
+  };
+
   return (
     <div
-      className={`h-11 w-full flex items-center px-1.5 select-none border-b border-white/5 transition-colors ${theme.suggestionBg}`}
+      className={`h-[42px] w-full flex items-center justify-between px-1.5 select-none ${theme.suggestionBg}`}
     >
-      {/* Left Menu / Collapse Button */}
+      {/* Left App Grid / Back Button (Gboard Toolbar Toggle) */}
       <button
-        onClick={() => setActiveToolbarView(isMenuOpen ? 'normal' : 'more_tools')}
-        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${
-          isMenuOpen
-            ? 'bg-cyan-500/30 text-cyan-200'
-            : 'text-slate-400 hover:text-cyan-200 hover:bg-white/5 active:scale-95'
+        type="button"
+        onClick={handleToggleMenu}
+        className={`w-9 h-8 flex items-center justify-center rounded-full transition-colors ${
+          activeToolbarView !== 'normal'
+            ? `${theme.suggestionActiveBg}`
+            : `${theme.textSecondary} hover:bg-white/10`
         }`}
-        title={isMenuOpen ? 'Close Menu' : 'Open Gboard Features'}
+        title="Gboard Tools"
       >
-        {isMenuOpen ? <ChevronLeft className="w-5 h-5" /> : <Menu className="w-4 h-4" />}
+        {activeToolbarView !== 'normal' ? (
+          <ChevronLeft className="w-[18px] h-[18px]" />
+        ) : (
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="opacity-85"
+          >
+            <rect x="4" y="4" width="6.5" height="6.5" rx="2" />
+            <rect x="13.5" y="4" width="6.5" height="6.5" rx="2" />
+            <rect x="4" y="13.5" width="6.5" height="6.5" rx="2" />
+            <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2" />
+          </svg>
+        )}
       </button>
 
-      {/* Incognito icon if active */}
+      {/* Incognito Indicator */}
       {incognito && (
-        <div className="flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-800 text-neutral-300 gap-1 mr-1">
-          <EyeOff className="w-3 h-3 text-cyan-400" />
-          <span>Incognito</span>
+        <div
+          className="flex items-center px-1.5 text-xs opacity-70"
+          title="Incognito Mode"
+        >
+          <EyeOff className="w-3.5 h-3.5" />
         </div>
       )}
 
-      {/* Main Bar: Either Toolbar Feature Icons OR Word Suggestions */}
-      {isMenuOpen ? (
-        // Expanded Toolbar Action Icons (Gboard style)
-        <div className="flex-1 flex items-center justify-around gap-1 overflow-x-auto no-scrollbar px-1">
+      {/* Center Area: Word Suggestions OR Gboard Quick Action Strip */}
+      {isMenuOpen || suggestions.length === 0 ? (
+        <div className="flex-1 flex items-center justify-around px-1 overflow-x-auto no-scrollbar">
           <button
+            type="button"
             onClick={() => setActiveToolbarView('emoji_picker')}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
-            title="Emoji & Stickers"
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'emoji_picker'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
+            title="Emojis & GIFs"
           >
-            <Smile className="w-4 h-4" />
+            <Smile className="w-[18px] h-[18px]" />
           </button>
+
           <button
-            onClick={() => setActiveToolbarView('translate')}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
-            title="Google Translate"
-          >
-            <Languages className="w-4 h-4" />
-          </button>
-          <button
+            type="button"
             onClick={() => setActiveToolbarView('clipboard')}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'clipboard'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
             title="Clipboard"
           >
-            <Clipboard className="w-4 h-4" />
+            <Clipboard className="w-[18px] h-[18px]" />
           </button>
+
           <button
-            onClick={() => setActiveToolbarView('text_edit')}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
-            title="Text Editing D-Pad"
+            type="button"
+            onClick={() => setActiveToolbarView('translate')}
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'translate'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
+            title="Translate"
           >
-            <Move className="w-4 h-4" />
+            <Languages className="w-[18px] h-[18px]" />
           </button>
+
           <button
+            type="button"
             onClick={() => setActiveToolbarView('themes')}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'themes'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
             title="Themes"
           >
-            <Palette className="w-4 h-4" />
+            <Palette className="w-[18px] h-[18px]" />
           </button>
+
           <button
-            onClick={() => {
-              if (onToggleOneHanded) onToggleOneHanded();
-            }}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
-            title="One-Handed Mode"
+            type="button"
+            onClick={() => setActiveToolbarView('text_edit')}
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'text_edit'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
+            title="Text Editing Cursor Control"
           >
-            <Smartphone className="w-4 h-4" />
+            <Move className="w-[18px] h-[18px]" />
           </button>
+
+          {isMenuOpen && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onToggleOneHanded) onToggleOneHanded();
+                }}
+                className={`p-2 rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10`}
+                title="One-Handed Mode"
+              >
+                <Smartphone className="w-[18px] h-[18px]" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveToolbarView('smart_ai')}
+                className={`p-2 rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10`}
+                title="Smart Rewrite"
+              >
+                <Wand2 className="w-[18px] h-[18px]" />
+              </button>
+            </>
+          )}
+
           <button
-            onClick={() => setActiveToolbarView('smart_ai')}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-300"
-            title="Smart Compose & AI Rewrite"
-          >
-            <Wand2 className="w-4 h-4" />
-          </button>
-          <button
+            type="button"
             onClick={() => {
               if (onOpenSettings) {
                 onOpenSettings();
@@ -135,58 +196,57 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
                 setActiveToolbarView('themes');
               }
             }}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
-            title="Settings"
+            className={`p-2 rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10`}
+            title="Keyboard Settings"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-[18px] h-[18px]" />
           </button>
         </div>
       ) : (
-        // Word Suggestions List
         <div className="flex-1 flex items-center justify-around overflow-hidden px-1">
-          {suggestions.length > 0 ? (
-            suggestions.slice(0, 3).map((word, idx) => {
-              const isPrimary = idx === 0;
-              return (
+          {suggestions.slice(0, 3).map((word, idx) => {
+            const isPrimary = idx === 0;
+            return (
+              <React.Fragment key={`${word}-${idx}`}>
+                {idx > 0 && (
+                  <div className="h-4 w-px bg-current opacity-15 shrink-0" />
+                )}
                 <button
-                  key={`${word}-${idx}`}
+                  type="button"
                   onClick={() => onSelectSuggestion(word)}
-                  className={`flex-1 mx-1 px-2 py-1.5 text-center text-sm font-medium rounded-md truncate transition-all active:scale-95 ${
+                  className={`flex-1 mx-1 px-2 py-1 text-center text-[14px] rounded-md truncate transition-colors ${
                     isPrimary
-                      ? `${theme.suggestionActiveBg} font-semibold`
-                      : `${theme.textPrimary} hover:bg-white/10`
+                      ? `${theme.textPrimary} font-semibold`
+                      : `${theme.textSecondary} font-normal hover:bg-white/5`
                   }`}
                 >
                   {word}
                 </button>
-              );
-            })
-          ) : (
-            <div className="flex items-center gap-2 text-xs text-slate-400/80">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-              <span>Text Q Board Ready</span>
-            </div>
-          )}
+              </React.Fragment>
+            );
+          })}
         </div>
       )}
 
-      {/* Voice Typing Button */}
+      {/* Right Voice Typing Microphone Icon */}
       <button
+        type="button"
         onClick={onStartVoiceTyping}
-        className="w-9 h-9 flex items-center justify-center rounded-full text-slate-300 hover:text-cyan-300 hover:bg-white/5 active:scale-90 transition-transform"
-        title="Voice Typing (Microphone)"
+        className={`w-9 h-8 flex items-center justify-center rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10 active:bg-white/20`}
+        title="Voice Typing"
       >
-        <Mic className="w-4 h-4" />
+        <Mic className="w-[18px] h-[18px]" />
       </button>
 
-      {/* Hide Keyboard Button (shown when onHideKeyboard is provided) */}
+      {/* Optional Hide Keyboard Button (in Android System IME mode) */}
       {onHideKeyboard && (
         <button
+          type="button"
           onClick={onHideKeyboard}
-          className="w-8 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-cyan-300 hover:bg-white/5 active:scale-90 transition-transform"
+          className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10`}
           title="Hide Keyboard"
         >
-          <ChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-[18px] h-[18px]" />
         </button>
       )}
     </div>

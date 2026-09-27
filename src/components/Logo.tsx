@@ -6,76 +6,76 @@ interface LogoProps {
   className?: string;
 }
 
+/**
+ * Clean, flat Gboard Material You Vector Emblem for Text Q Board
+ * Zero 3D effects or bevels — crisp geometric vector mark
+ */
 export const TextQBoardLogo: React.FC<LogoProps> = ({
   size = 'md',
   showLabel = true,
   className = '',
 }) => {
-  const sizeClasses = {
-    sm: {
-      container: 'gap-1',
-      key: 'w-6 h-6 text-xs rounded-md',
-      pill: 'px-2.5 py-0.5 text-[10px] mt-1.5',
-    },
-    md: {
-      container: 'gap-1.5',
-      key: 'w-9 h-9 text-sm rounded-lg',
-      pill: 'px-3.5 py-1 text-xs font-bold mt-2',
-    },
-    lg: {
-      container: 'gap-2',
-      key: 'w-12 h-12 text-base rounded-xl',
-      pill: 'px-5 py-1.5 text-sm font-extrabold mt-3',
-    },
-    hero: {
-      container: 'gap-3',
-      key: 'w-16 h-16 text-xl rounded-2xl',
-      pill: 'px-8 py-2.5 text-lg font-black mt-4',
-    },
+  const dimensions = {
+    sm: { svg: 32, text: 'text-sm font-semibold' },
+    md: { svg: 42, text: 'text-base font-bold' },
+    lg: { svg: 56, text: 'text-lg font-bold' },
+    hero: { svg: 72, text: 'text-xl font-bold' },
   }[size];
 
-  const keyStyle =
-    'relative flex items-center justify-center font-bold text-white bg-gradient-to-b from-[#1c2b3e] to-[#0c1420] border-[1.5px] border-cyan-400/70 shadow-[0_0_12px_rgba(6,182,212,0.45),inset_0_1px_2px_rgba(255,255,255,0.3)] transition-transform hover:scale-105 active:scale-95 select-none';
-
   return (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
-      {/* 8 Keys Grid matching the uploaded image */}
-      <div className={`grid grid-cols-4 ${sizeClasses.container}`}>
-        {/* Row 1: T + ● — */}
-        <div className={`${keyStyle} ${sizeClasses.key}`}>
-          <span className="text-cyan-100 drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]">T</span>
-        </div>
-        <div className={`${keyStyle} ${sizeClasses.key}`}>
-          <span className="text-cyan-200 drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]">+</span>
-        </div>
-        <div className={`${keyStyle} ${sizeClasses.key}`}>
-          <div className="w-2.5 h-2.5 rounded-full bg-cyan-200 shadow-[0_0_8px_#22d3ee]" />
-        </div>
-        <div className={`${keyStyle} ${sizeClasses.key}`}>
-          <span className="text-cyan-200 drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]">—</span>
-        </div>
+    <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
+      <svg
+        width={dimensions.svg}
+        height={dimensions.svg}
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="shrink-0"
+      >
+        {/* Flat Material 3 Squircle Tile */}
+        <rect width="64" height="64" rx="16" fill="#1E232E" />
+        <rect
+          x="1"
+          y="1"
+          width="62"
+          height="62"
+          rx="15"
+          stroke="#A8C7FA"
+          strokeOpacity="0.22"
+          strokeWidth="2"
+        />
 
-        {/* Row 2: — Q + B */}
-        <div className={`${keyStyle} ${sizeClasses.key}`}>
-          <span className="text-cyan-200 drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]">—</span>
-        </div>
-        <div className={`${keyStyle} ${sizeClasses.key}`}>
-          <span className="text-cyan-100 drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]">Q</span>
-        </div>
-        <div className={`${keyStyle} ${sizeClasses.key}`}>
-          <span className="text-cyan-200 drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]">+</span>
-        </div>
-        <div className={`${keyStyle} ${sizeClasses.key}`}>
-          <span className="text-cyan-100 drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]">B</span>
-        </div>
-      </div>
+        {/* Top Gboard-style Material Accent Bar */}
+        <circle cx="18" cy="15" r="3" fill="#4285F4" />
+        <circle cx="27" cy="15" r="3" fill="#EA4335" />
+        <circle cx="36" cy="15" r="3" fill="#FBBC04" />
+        <circle cx="45" cy="15" r="3" fill="#34A853" />
 
-      {/* Pill Badge matching "Text Q Board" */}
+        {/* Row 1 Flat Keycaps */}
+        <rect x="11" y="23" width="9" height="8" rx="2.5" fill="#2F3542" />
+        <rect x="22" y="23" width="9" height="8" rx="2.5" fill="#2F3542" />
+        <rect x="33" y="23" width="9" height="8" rx="2.5" fill="#2F3542" />
+        <rect x="44" y="23" width="9" height="8" rx="2.5" fill="#2F3542" />
+
+        {/* Row 2 Flat Keycaps with Highlighted Q Key */}
+        <rect x="14" y="34" width="9" height="8" rx="2.5" fill="#2F3542" />
+        <rect x="25" y="34" width="14" height="8" rx="2.5" fill="#A8C7FA" />
+        <rect x="41" y="34" width="9" height="8" rx="2.5" fill="#2F3542" />
+
+        {/* Flat Spacebar Row */}
+        <rect x="11" y="45" width="8" height="7" rx="2.5" fill="#252A34" />
+        <rect x="21" y="45" width="22" height="7" rx="3.5" fill="#3A4152" />
+        <rect x="45" y="45" width="8" height="7" rx="3.5" fill="#A8C7FA" />
+      </svg>
+
       {showLabel && (
-        <div
-          className={`glass-pill rounded-full border border-cyan-300/80 text-slate-900 tracking-tight flex items-center justify-center shadow-[0_4px_14px_rgba(6,182,212,0.4)] ${sizeClasses.pill}`}
-        >
-          <span>Text Q Board</span>
+        <div className="flex flex-col">
+          <span className={`tracking-tight text-[#E3E2E6] leading-tight ${dimensions.text}`}>
+            Text Q Board
+          </span>
+          <span className="text-[11px] text-[#9AA0A6] font-normal">
+            Gboard Input Engine
+          </span>
         </div>
       )}
     </div>

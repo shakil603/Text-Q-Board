@@ -1,16 +1,22 @@
 package com.textqboard.app;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.inputmethodservice.InputMethodService;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.util.DisplayMetrics;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -20,6 +26,8 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -27,7 +35,12 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import androidx.core.content.ContextCompat;
 import androidx.webkit.WebViewAssetLoader;
+
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class TextQBoardIMEService extends InputMethodService {
 
@@ -36,25 +49,24 @@ public class TextQBoardIMEService extends InputMethodService {
 
     private FrameLayout rootContainer;
     private WebView imeWebView;
+    private SpeechRecognizer speechRecognizer;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private int currentHeightDp = 296;
+    private int currentHeightDp = 290;
 
     @Override
     public boolean onEvaluateFullscreenMode() {
-        // Never cover the full screen in landscape or portrait
         return false;
     }
 
     @Override
     public View onCreateInputView() {
         rootContainer = new FrameLayout(this);
-        rootContainer.setBackgroundColor(0xFF0B1320);
+        rootContainer.setBackgroundColor(0xFF1B1B1F);
         rootContainer.setLayoutParams(new ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
-        // Respect bottom navigation bar inset on Android 10-16 (Edge-to-Edge)
         rootContainer.setOnApplyWindowInsetsListener((v, insets) -> {
             int bottomInset = insets.getSystemWindowInsetBottom();
             v.setPadding(0, 0, 0, Math.max(0, bottomInset));
@@ -62,7 +74,7 @@ public class TextQBoardIMEService extends InputMethodService {
         });
 
         imeWebView = new WebView(this);
-        imeWebView.setBackgroundColor(0xFF0B1320);
+        imeWebView.setBackgroundColor(0xFF1B1B1F);
         imeWebView.setVerticalScrollBarEnabled(false);
         imeWebView.setHorizontalScrollBarEnabled(false);
         imeWebView.setOverScrollMode(View.OVER_SCROLL_NEVER);
@@ -99,6 +111,18 @@ public class TextQBoardIMEService extends InputMethodService {
             }
         });
 
+        imeWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(final PermissionRequest request) {
+                mainHandler.post(() -> {
+                    try {
+                        request.grant(request.getResources());
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+        });
+
         imeWebView.addJavascriptInterface(new ImeJavascriptBridge(), "AndroidIME");
 
         FrameLayout.LayoutParams webParams = new FrameLayout.LayoutParams(
@@ -127,9 +151,134 @@ public class TextQBoardIMEService extends InputMethodService {
         }
     }
 
+    @Override
+    public void onDestroy() {
+        if (speechRecognizer != null) {
+            try {
+                speechRecognizer.destroy();
+            } catch (Exception ignored) {
+            }
+            speechRecognizer = null;
+        }
+        super.onDestroy();
+    }
+
     private int dpToPx(int dp) {
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         return Math.round(dp * metrics.density);
+    }
+
+    private void dispatchVoiceEvent(String type, String payload) {
+        if (imeWebView != null) {
+            final String safeType = JSONObject.quote(type != null ? type : "");
+            final String safePayload = JSONObject.quote(payload != null ? payload : "");
+            imeWebView.post(() -> {
+                imeWebView.evaluateJavascript(
+                    "if(window.dispatchNativeVoiceEvent){window.dispatchNativeVoiceEvent(" + safeType + "," + safePayload + ");}",
+                    null
+                );
+            });
+        }
+    }
+
+    private void startInternalVoiceRecognition(String lang) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Launch MainActivity to request RECORD_AUDIO permission from Android OS
+            try {
+                Intent permIntent = new Intent(TextQBoardIMEService.this, MainActivity.class);
+                permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                permIntent.putExtra("REQUEST_MIC_PERMISSION", true);
+                startActivity(permIntent);
+                dispatchVoiceEvent("permission_requested", "Please allow microphone permission in the popup.");
+            } catch (Exception e) {
+                dispatchVoiceEvent("error", "Please grant Microphone permission to Text Q Board in Android Settings.");
+            }
+            return;
+        }
+
+        final String locale = (lang != null && !lang.isEmpty()) ? lang : "en-US";
+
+        try {
+            if (speechRecognizer != null) {
+                try {
+                    speechRecognizer.destroy();
+                } catch (Exception ignored) {
+                }
+            }
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+            speechRecognizer.setRecognitionListener(new RecognitionListener() {
+                @Override
+                public void onReadyForSpeech(Bundle params) {
+                    dispatchVoiceEvent("listening", "");
+                }
+
+                @Override
+                public void onBeginningOfSpeech() {
+                    dispatchVoiceEvent("listening", "");
+                }
+
+                @Override
+                public void onRmsChanged(float rmsdB) {
+                    dispatchVoiceEvent("rms", String.valueOf(rmsdB));
+                }
+
+                @Override
+                public void onBufferReceived(byte[] buffer) {}
+
+                @Override
+                public void onEndOfSpeech() {
+                    dispatchVoiceEvent("end", "");
+                }
+
+                @Override
+                public void onError(int error) {
+                    String msg = "Tap microphone to speak again";
+                    if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) {
+                        msg = "Microphone permission is required.";
+                    } else if (error == SpeechRecognizer.ERROR_NO_MATCH) {
+                        msg = "Didn't catch that. Tap mic to try again.";
+                    } else if (error == SpeechRecognizer.ERROR_NETWORK || error == SpeechRecognizer.ERROR_NETWORK_TIMEOUT) {
+                        msg = "Network error during voice recognition.";
+                    }
+                    dispatchVoiceEvent("error", msg);
+                }
+
+                @Override
+                public void onResults(Bundle results) {
+                    ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (matches != null && !matches.isEmpty()) {
+                        dispatchVoiceEvent("final", matches.get(0));
+                    } else {
+                        dispatchVoiceEvent("end", "");
+                    }
+                }
+
+                @Override
+                public void onPartialResults(Bundle partialResults) {
+                    ArrayList<String> partial = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (partial != null && !partial.isEmpty()) {
+                        dispatchVoiceEvent("partial", partial.get(0));
+                    }
+                }
+
+                @Override
+                public void onEvent(int eventType, Bundle params) {}
+            });
+
+            Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, locale);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
+
+            speechRecognizer.startListening(recognizerIntent);
+            dispatchVoiceEvent("listening", "");
+        } catch (Exception e) {
+            dispatchVoiceEvent("error", "Voice recognition unavailable: " + e.getMessage());
+        }
     }
 
     public class ImeJavascriptBridge {
@@ -278,6 +427,42 @@ public class TextQBoardIMEService extends InputMethodService {
                         am.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, -1f);
                     }
                 } catch (Exception ignored) {
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public boolean hasMicPermission() {
+            return ContextCompat.checkSelfPermission(TextQBoardIMEService.this, Manifest.permission.RECORD_AUDIO)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+
+        @JavascriptInterface
+        public void requestMicPermission() {
+            mainHandler.post(() -> {
+                try {
+                    Intent permIntent = new Intent(TextQBoardIMEService.this, MainActivity.class);
+                    permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    permIntent.putExtra("REQUEST_MIC_PERMISSION", true);
+                    startActivity(permIntent);
+                } catch (Exception ignored) {
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void startVoiceListening(String lang) {
+            mainHandler.post(() -> startInternalVoiceRecognition(lang));
+        }
+
+        @JavascriptInterface
+        public void stopVoiceListening() {
+            mainHandler.post(() -> {
+                if (speechRecognizer != null) {
+                    try {
+                        speechRecognizer.stopListening();
+                    } catch (Exception ignored) {
+                    }
                 }
             });
         }

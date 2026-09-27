@@ -10,6 +10,10 @@ interface AndroidImeBridge {
   performContextMenuAction: (action: string) => void;
   vibrate: (durationMs: number) => void;
   playKeySound: () => void;
+  hasMicPermission?: () => boolean;
+  requestMicPermission?: () => void;
+  startVoiceListening?: (lang: string) => void;
+  stopVoiceListening?: () => void;
   switchInputMethod: () => void;
   hideKeyboard: () => void;
   openSettings: () => void;
@@ -23,6 +27,10 @@ interface AndroidNativeSetupBridge {
   isImeSelected: () => boolean;
   openInputMethodSettings: () => void;
   showInputMethodPicker: () => void;
+  hasMicPermission?: () => boolean;
+  requestMicPermission?: () => void;
+  startVoiceListening?: (lang: string) => void;
+  stopVoiceListening?: () => void;
   getSettingsJson: () => string;
   saveSettingsJson: (json: string) => void;
 }
@@ -32,6 +40,7 @@ declare global {
     AndroidIME?: AndroidImeBridge;
     AndroidNative?: AndroidNativeSetupBridge;
     onAndroidImeStart?: (inputType: number, imeOptions: number) => void;
+    dispatchNativeVoiceEvent?: (type: string, payload: string) => void;
   }
 }
 
@@ -45,7 +54,65 @@ export function isSystemImeMode(): boolean {
 
 export function isNativeAndroidApp(): boolean {
   if (typeof window === 'undefined') return false;
-  return Boolean(window.AndroidNative);
+  return Boolean(window.AndroidNative || window.AndroidIME);
+}
+
+export function hasNativeVoiceBridge(): boolean {
+  if (typeof window === 'undefined') return false;
+  return Boolean(
+    window.AndroidIME?.startVoiceListening || window.AndroidNative?.startVoiceListening
+  );
+}
+
+export function hasNativeMicPermission(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (window.AndroidIME?.hasMicPermission) {
+      return Boolean(window.AndroidIME.hasMicPermission());
+    }
+    if (window.AndroidNative?.hasMicPermission) {
+      return Boolean(window.AndroidNative.hasMicPermission());
+    }
+  } catch {}
+  return false;
+}
+
+export function requestNativeMicPermission(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (window.AndroidIME?.requestMicPermission) {
+      window.AndroidIME.requestMicPermission();
+    } else if (window.AndroidNative?.requestMicPermission) {
+      window.AndroidNative.requestMicPermission();
+    }
+  } catch {}
+}
+
+export function startNativeVoiceListening(lang: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (window.AndroidIME?.startVoiceListening) {
+      window.AndroidIME.startVoiceListening(lang);
+      return true;
+    }
+    if (window.AndroidNative?.startVoiceListening) {
+      window.AndroidNative.startVoiceListening(lang);
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+export function stopNativeVoiceListening(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (window.AndroidIME?.stopVoiceListening) {
+      window.AndroidIME.stopVoiceListening();
+    }
+    if (window.AndroidNative?.stopVoiceListening) {
+      window.AndroidNative.stopVoiceListening();
+    }
+  } catch {}
 }
 
 export function getAndroidImeStatus(): {

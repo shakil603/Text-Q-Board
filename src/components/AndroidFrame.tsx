@@ -7,16 +7,10 @@ import {
   StickyNote,
   Search,
   Zap,
-  Languages,
   Smartphone,
   Send,
   Plus,
-  Trash2,
-  CheckCircle2,
-  Play,
   RotateCcw,
-  Sparkles,
-  ExternalLink,
   Download
 } from 'lucide-react';
 import { TextQBoardLogo } from './Logo';
@@ -56,12 +50,10 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
   inputText,
   onInputChange,
   onInputFocus,
-  onSendMessage,
   cursorPos,
   onCursorChange,
   children,
 }) => {
-  // Current real-time clock
   const [currentTime, setCurrentTime] = useState('');
 
   useEffect(() => {
@@ -76,54 +68,42 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Chat App State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       sender: 'bot',
-      text: 'Hello! Welcome to Text Q Board. Try typing in English or Bengali (Phonetic: "amar", "bangla", "kemon acho")!',
+      text: 'Welcome to Text Q Board. Type in English or Bengali (Phonetic: "amar", "bangla", "kemon acho") or tap the microphone icon for Voice Typing.',
       time: '09:41',
-    },
-    {
-      id: '2',
-      sender: 'bot',
-      text: 'You can test Glide Typing (swiping across letters), speech-to-text, and Emoji Kitchen mashups!',
-      time: '09:42',
     },
   ]);
 
-  // Notes App State
   const [notes, setNotes] = useState<NoteItem[]>([
     {
       id: 'n1',
       title: 'Text Q Board Features',
-      content: '1. Cyber Cyan Neon Keycaps\n2. Bengali Avro phonetic & Jatiya layout\n3. Real-time translation\n4. Emoji Kitchen stickers',
+      content: '1. Authentic Gboard Material 3 Layout\n2. Bengali Phonetic & Jatiya Layouts\n3. Voice Typing & Glide Typing\n4. Emoji Kitchen & Clipboard',
       date: 'Today',
     },
     {
       id: 'n2',
       title: 'বাংলা নোট',
-      content: 'আমার সোনার বাংলা, আমি তোমায় ভালোবাসি। চিরদিন তোমার আকাশ, তোমার বাতাস...',
+      content: 'আমার সোনার বাংলা, আমি তোমায় ভালোবাসি।',
       date: 'Yesterday',
     },
   ]);
   const [selectedNoteId, setSelectedNoteId] = useState<string>('n1');
 
-  // Search App State
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Speed Test State
-  const [testText, setTestText] = useState('The quick brown fox jumps over the lazy dog and tests Text Q Board speed');
+  const [testText] = useState('The quick brown fox jumps over the lazy dog and tests Text Q Board speed');
   const [testStarted, setTestStarted] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [wpm, setWpm] = useState<number>(0);
   const [accuracy, setAccuracy] = useState<number>(100);
 
-  // Focusable input ref
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
 
-  // Sync cursor position from props
   useEffect(() => {
     if (inputRef.current && cursorPos >= 0) {
       try {
@@ -132,7 +112,6 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
     }
   }, [cursorPos]);
 
-  // Send Chat Message
   const handleSendChat = () => {
     if (!inputText.trim()) return;
     const userMsg: ChatMessage = {
@@ -146,19 +125,14 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
     const sentText = inputText.trim();
     onInputChange('');
 
-    // Simulated Intelligent Bot Reply in English or Bengali
     setTimeout(() => {
-      let replyText = 'Got your message! Text Q Board is responding smoothly.';
+      let replyText = 'Message received via Text Q Board Gboard engine.';
       const lower = sentText.toLowerCase();
 
       if (lower.includes('kemon') || lower.includes('কেমন') || lower.includes('valo') || lower.includes('ভালো')) {
-        replyText = 'আমি খুব ভালো আছি! আপনি কেমন আছেন? টেক্সট কিউ বোর্ড কিবোর্ড চমৎকার কাজ করছে!';
+        replyText = 'আমি ভালো আছি! আপনি কেমন আছেন?';
       } else if (lower.includes('amar') || lower.includes('আমার') || lower.includes('bangla') || lower.includes('বাংলা')) {
-        replyText = 'বাংলা ভাষায় নিখুঁত টাইপিং নিশ্চিত করছে আমাদের টেক্সট কিউ বোর্ড ফোনেটিক ইঞ্জিন!';
-      } else if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
-        replyText = 'Hey there! How is the typing experience with the cyber cyan neon keys?';
-      } else if (lower.includes('gboard') || lower.includes('text q board')) {
-        replyText = 'Text Q Board provides all Gboard options with 100% open-source privacy guarantee!';
+        replyText = 'বাংলা ফোনেটিক এবং জাতীয় লেআউট নিখুঁতভাবে কাজ করছে।';
       }
 
       const botReply: ChatMessage = {
@@ -168,25 +142,22 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
       };
       setChatMessages((prev) => [...prev, botReply]);
-    }, 600);
+    }, 500);
   };
 
-  // Run Search
   const handleRunSearch = () => {
     if (!inputText.trim()) return;
     setIsSearching(true);
     setTimeout(() => {
       setSearchResults([
-        `Definition: ${inputText} — Top search result with Text Q Board integration.`,
-        `Latest news and updates regarding "${inputText}" around the world.`,
-        `Wikipedia encyclopedia entry for ${inputText}.`,
-        `Bangla dictionary and grammar translation for ${inputText}.`,
+        `Result: ${inputText} — Gboard search integration.`,
+        `Latest articles and definitions for "${inputText}".`,
+        `Bengali and English dictionary lookup for ${inputText}.`,
       ]);
       setIsSearching(false);
-    }, 350);
+    }, 300);
   };
 
-  // Speed Test calculation
   useEffect(() => {
     if (activeApp === 'speed_test') {
       if (inputText.length > 0 && !testStarted) {
@@ -200,7 +171,6 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
           setWpm(Math.round(words / timeElapsedMin));
         }
 
-        // Accuracy
         let correctChars = 0;
         for (let i = 0; i < inputText.length; i++) {
           if (inputText[i] === testText[i]) correctChars++;
@@ -211,45 +181,41 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
   }, [inputText, activeApp, testStarted, startTime, testText]);
 
   return (
-    <div className="flex flex-col h-full w-full max-w-md mx-auto bg-slate-950 rounded-[40px] border-[6px] border-slate-800 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_25px_rgba(6,182,212,0.25)] overflow-hidden relative">
-      {/* Android Camera Pill / Notch */}
-      <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-black rounded-full z-40 flex items-center justify-end px-2">
-        <div className="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-700/60" />
-      </div>
-
+    <div className="flex flex-col h-full w-full max-w-md mx-auto bg-[#111318] rounded-[36px] border-[5px] border-[#232429] shadow-2xl overflow-hidden relative">
       {/* 1. ANDROID STATUS BAR */}
-      <div className="h-8 w-full flex items-center justify-between px-6 pt-1 text-[11px] font-semibold text-slate-300 select-none z-30">
+      <div className="h-8 w-full flex items-center justify-between px-6 pt-1 text-[11px] font-medium text-[#c4c6d0] select-none z-30 bg-[#1b1b1f]">
         <span>{currentTime || '12:00'}</span>
-        <div className="flex items-center gap-1.5 text-slate-300">
+        <div className="flex items-center gap-1.5 text-[#c4c6d0]">
           <Signal className="w-3.5 h-3.5" />
-          <span className="text-[10px] font-bold text-cyan-400">5G</span>
+          <span className="text-[10px] font-semibold text-[#a8c7fa]">5G</span>
           <Wifi className="w-3.5 h-3.5" />
           <div className="flex items-center gap-0.5">
             <span className="text-[10px]">98%</span>
-            <Battery className="w-3.5 h-3.5 text-cyan-400" />
+            <Battery className="w-3.5 h-3.5 text-[#a8c7fa]" />
           </div>
         </div>
       </div>
 
-      {/* 2. ANDROID APP DRAWER TABS BAR */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/90 border-b border-white/5 select-none overflow-x-auto no-scrollbar gap-1">
+      {/* 2. ANDROID APP TABS BAR */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[#1b1b1f] border-b border-white/8 select-none overflow-x-auto no-scrollbar gap-1">
         {[
-          { id: 'chat', label: 'Chat', icon: MessageSquare },
+          { id: 'chat', label: 'Messages', icon: MessageSquare },
           { id: 'notes', label: 'Notes', icon: StickyNote },
           { id: 'search', label: 'Search', icon: Search },
           { id: 'speed_test', label: 'WPM Test', icon: Zap },
-          { id: 'setup_guide', label: 'Android Setup', icon: Smartphone },
+          { id: 'setup_guide', label: 'APK Setup', icon: Smartphone },
         ].map((app) => {
           const Icon = app.icon;
           const isActive = activeApp === app.id;
           return (
             <button
               key={app.id}
+              type="button"
               onClick={() => onSelectApp(app.id as AndroidAppId)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                 isActive
-                  ? 'bg-cyan-500 text-slate-950 shadow-[0_0_10px_rgba(6,182,212,0.4)]'
-                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white'
+                  ? 'bg-[#a8c7fa] text-[#062e6f] font-semibold'
+                  : 'bg-[#232429] text-[#c4c6d0] hover:bg-[#2f3036] hover:text-white'
               }`}
             >
               <Icon className="w-3 h-3" />
@@ -259,26 +225,19 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
         })}
       </div>
 
-      {/* 3. ACTIVE APP SCREEN CONTENT (SCROLLABLE AREA) */}
+      {/* 3. ACTIVE APP SCREEN CONTENT */}
       <div className="flex-1 overflow-y-auto p-3 flex flex-col no-scrollbar">
-        {/* APP 1: CHAT */}
+        {/* APP 1: MESSAGES */}
         {activeApp === 'chat' && (
           <div className="flex-1 flex flex-col justify-between space-y-3">
-            {/* Chat header */}
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-900/60 border border-white/5">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs">
-                Q
-              </div>
+            <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#1b1b1f] border border-white/8">
+              <TextQBoardLogo size="sm" showLabel={false} />
               <div className="flex-1">
-                <p className="text-xs font-bold text-white">Text Q Assistant (বাংলা ও English)</p>
-                <p className="text-[10px] text-cyan-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  <span>Online • Gboard Engine Active</span>
-                </p>
+                <p className="text-xs font-semibold text-white">Messages (বাংলা • English)</p>
+                <p className="text-[11px] text-[#9aa0a6]">Gboard Material 3 Input Active</p>
               </div>
             </div>
 
-            {/* Messages Feed */}
             <div className="flex-1 space-y-2.5 overflow-y-auto py-1">
               {chatMessages.map((msg) => (
                 <div
@@ -290,20 +249,19 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                   <div
                     className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
                       msg.sender === 'user'
-                        ? 'bg-cyan-500 text-slate-950 font-medium rounded-br-none shadow-[0_2px_8px_rgba(6,182,212,0.3)]'
-                        : 'bg-slate-800 text-slate-100 rounded-bl-none border border-white/5'
+                        ? 'bg-[#a8c7fa] text-[#062e6f] font-medium rounded-br-sm'
+                        : 'bg-[#232429] text-[#e3e2e6] rounded-bl-sm border border-white/5'
                     }`}
                   >
                     {msg.text}
                   </div>
-                  <span className="text-[9px] text-slate-500 px-1 mt-0.5">{msg.time}</span>
+                  <span className="text-[9px] text-[#9aa0a6] px-1 mt-0.5">{msg.time}</span>
                 </div>
               ))}
             </div>
 
-            {/* Chat Input Field Box */}
             <div className="pt-1">
-              <div className="flex items-center gap-1.5 bg-slate-900 border border-cyan-500/40 rounded-2xl p-1.5 shadow-[0_0_12px_rgba(6,182,212,0.15)]">
+              <div className="flex items-center gap-1.5 bg-[#1b1b1f] border border-white/12 rounded-full px-3 py-1.5">
                 <input
                   ref={inputRef as React.RefObject<HTMLInputElement>}
                   type="text"
@@ -316,12 +274,13 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                   onFocus={onInputFocus}
                   onClick={(e) => onCursorChange((e.target as HTMLInputElement).selectionStart || 0)}
                   onKeyUp={(e) => onCursorChange((e.target as HTMLInputElement).selectionStart || 0)}
-                  placeholder="Type message with Text Q Board..."
-                  className="flex-1 bg-transparent text-xs text-white placeholder-slate-400 px-2 py-1 outline-none"
+                  placeholder="Text message"
+                  className="flex-1 bg-transparent text-xs text-white placeholder-[#9aa0a6] outline-none"
                 />
                 <button
+                  type="button"
                   onClick={handleSendChat}
-                  className="w-8 h-8 rounded-xl bg-cyan-500 text-slate-950 flex items-center justify-center hover:bg-cyan-400 active:scale-95 transition-transform"
+                  className="w-7 h-7 rounded-full bg-[#a8c7fa] text-[#062e6f] flex items-center justify-center hover:bg-[#b8d2fc]"
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>
@@ -334,8 +293,9 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
         {activeApp === 'notes' && (
           <div className="flex-1 flex flex-col space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider">Keep Notes</h3>
+              <h3 className="text-xs font-semibold text-[#a8c7fa]">Keep Notes</h3>
               <button
+                type="button"
                 onClick={() => {
                   const newNote: NoteItem = {
                     id: Date.now().toString(),
@@ -347,15 +307,14 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                   setSelectedNoteId(newNote.id);
                   onInputChange('');
                 }}
-                className="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs font-bold flex items-center gap-1 hover:bg-cyan-500/30"
+                className="px-2.5 py-1 rounded-lg bg-[#2f3036] text-[#a8c7fa] text-xs font-medium flex items-center gap-1 hover:bg-[#373940]"
               >
                 <Plus className="w-3 h-3" />
                 <span>New</span>
               </button>
             </div>
 
-            {/* Note Editor Area */}
-            <div className="flex-1 flex flex-col bg-slate-900/80 rounded-2xl p-3 border border-white/5 space-y-2">
+            <div className="flex-1 flex flex-col bg-[#1b1b1f] rounded-xl p-3 border border-white/8 space-y-2">
               <input
                 type="text"
                 value={notes.find((n) => n.id === selectedNoteId)?.title || 'Note'}
@@ -365,7 +324,7 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                     prev.map((n) => (n.id === selectedNoteId ? { ...n, title: t } : n))
                   );
                 }}
-                className="w-full bg-transparent font-bold text-sm text-white outline-none border-b border-white/10 pb-1"
+                className="w-full bg-transparent font-semibold text-sm text-white outline-none border-b border-white/10 pb-1"
                 placeholder="Title"
               />
               <textarea
@@ -381,8 +340,8 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                 onFocus={onInputFocus}
                 onClick={(e) => onCursorChange((e.target as HTMLTextAreaElement).selectionStart || 0)}
                 onKeyUp={(e) => onCursorChange((e.target as HTMLTextAreaElement).selectionStart || 0)}
-                placeholder="Start typing your note in any language..."
-                className="w-full flex-1 bg-transparent text-xs text-slate-200 placeholder-slate-500 resize-none outline-none leading-relaxed"
+                placeholder="Start typing your note..."
+                className="w-full flex-1 bg-transparent text-xs text-[#e3e2e6] placeholder-[#9aa0a6] resize-none outline-none leading-relaxed"
               />
             </div>
           </div>
@@ -391,8 +350,8 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
         {/* APP 3: SEARCH */}
         {activeApp === 'search' && (
           <div className="flex-1 flex flex-col space-y-3">
-            <div className="flex items-center gap-2 bg-slate-900 border border-cyan-500/40 rounded-full px-3 py-2 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
-              <Search className="w-4 h-4 text-cyan-400" />
+            <div className="flex items-center gap-2 bg-[#1b1b1f] border border-white/12 rounded-full px-3 py-2">
+              <Search className="w-4 h-4 text-[#a8c7fa]" />
               <input
                 ref={inputRef as React.RefObject<HTMLInputElement>}
                 type="text"
@@ -403,40 +362,40 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                   onCursorChange(e.target.selectionStart || 0);
                 }}
                 onFocus={onInputFocus}
-                placeholder="Search web or type URL..."
-                className="flex-1 bg-transparent text-xs text-white placeholder-slate-400 outline-none"
+                placeholder="Search or type URL..."
+                className="flex-1 bg-transparent text-xs text-white placeholder-[#9aa0a6] outline-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleRunSearch();
                 }}
               />
               <button
+                type="button"
                 onClick={handleRunSearch}
-                className="px-2.5 py-0.5 rounded-full bg-cyan-500 text-slate-950 font-bold text-xs"
+                className="px-2.5 py-0.5 rounded-full bg-[#a8c7fa] text-[#062e6f] font-semibold text-xs"
               >
                 Go
               </button>
             </div>
 
-            {/* Results */}
             <div className="flex-1 space-y-2 overflow-y-auto">
               {isSearching ? (
-                <div className="text-center py-6 text-xs text-cyan-300 animate-pulse">
-                  Searching Google for "{inputText}"...
+                <div className="text-center py-6 text-xs text-[#a8c7fa]">
+                  Searching for "{inputText}"...
                 </div>
               ) : searchResults.length > 0 ? (
                 searchResults.map((res, i) => (
                   <div
                     key={i}
-                    className="p-3 rounded-xl bg-slate-900/60 border border-white/5 hover:border-cyan-500/30 text-xs text-slate-200"
+                    className="p-3 rounded-xl bg-[#1b1b1f] border border-white/8 text-xs text-[#e3e2e6]"
                   >
-                    <p className="font-semibold text-cyan-300 text-xs mb-0.5">Google Instant Result #{i + 1}</p>
-                    <p className="text-slate-300 text-[11px] leading-relaxed">{res}</p>
+                    <p className="font-semibold text-[#a8c7fa] text-xs mb-0.5">Search Result #{i + 1}</p>
+                    <p className="text-[#c4c6d0] text-[11px] leading-relaxed">{res}</p>
                   </div>
                 ))
               ) : (
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-white/5 text-center text-slate-400 text-xs space-y-2">
-                  <Search className="w-8 h-8 mx-auto text-slate-600" />
-                  <p>Type any keyword or Bengali query using Text Q Board and press Enter to test search integration.</p>
+                <div className="p-4 rounded-xl bg-[#1b1b1f] border border-white/8 text-center text-[#9aa0a6] text-xs space-y-2">
+                  <Search className="w-7 h-7 mx-auto text-[#9aa0a6]" />
+                  <p>Type any query using Text Q Board and press Enter.</p>
                 </div>
               )}
             </div>
@@ -446,21 +405,21 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
         {/* APP 4: SPEED TEST */}
         {activeApp === 'speed_test' && (
           <div className="flex-1 flex flex-col space-y-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-r from-cyan-950/60 to-slate-900 border border-cyan-500/30 flex items-center justify-around">
+            <div className="p-3 rounded-xl bg-[#1b1b1f] border border-white/8 flex items-center justify-around">
               <div className="text-center">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Speed</p>
-                <p className="text-xl font-extrabold text-cyan-400 font-mono">{wpm} <span className="text-[10px]">WPM</span></p>
+                <p className="text-[10px] font-semibold text-[#9aa0a6] uppercase">Speed</p>
+                <p className="text-xl font-bold text-[#a8c7fa] tabular-nums">{wpm} <span className="text-[10px]">WPM</span></p>
               </div>
               <div className="h-8 w-px bg-white/10" />
               <div className="text-center">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Accuracy</p>
-                <p className="text-xl font-extrabold text-emerald-400 font-mono">{accuracy}%</p>
+                <p className="text-[10px] font-semibold text-[#9aa0a6] uppercase">Accuracy</p>
+                <p className="text-xl font-bold text-[#6dd58c] tabular-nums">{accuracy}%</p>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-900/80 border border-white/10 text-xs text-slate-300 leading-relaxed">
-              <p className="text-[10px] font-bold text-cyan-400 mb-1">PROMPT TO TYPE:</p>
-              <p className="font-mono bg-black/40 p-2 rounded-lg text-cyan-100">{testText}</p>
+            <div className="p-3 rounded-xl bg-[#1b1b1f] border border-white/8 text-xs text-[#c4c6d0] leading-relaxed">
+              <p className="text-[10px] font-semibold text-[#a8c7fa] mb-1">PROMPT TO TYPE:</p>
+              <p className="font-mono bg-[#111318] p-2 rounded-lg text-[#e3e2e6]">{testText}</p>
             </div>
 
             <div className="flex-1">
@@ -473,12 +432,13 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                   onCursorChange(e.target.selectionStart || 0);
                 }}
                 onFocus={onInputFocus}
-                placeholder="Start typing the prompt above with Text Q Board..."
-                className="w-full h-24 p-2.5 rounded-xl bg-slate-900 border border-cyan-500/40 text-xs text-white resize-none outline-none"
+                placeholder="Start typing the prompt above..."
+                className="w-full h-24 p-2.5 rounded-xl bg-[#1b1b1f] border border-white/12 text-xs text-white resize-none outline-none"
               />
             </div>
 
             <button
+              type="button"
               onClick={() => {
                 onInputChange('');
                 setTestStarted(false);
@@ -486,7 +446,7 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                 setWpm(0);
                 setAccuracy(100);
               }}
-              className="py-1.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700 flex items-center justify-center gap-1"
+              className="py-1.5 rounded-xl bg-[#2f3036] text-xs font-medium text-[#e3e2e6] hover:bg-[#373940] flex items-center justify-center gap-1"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Test</span>
@@ -496,74 +456,47 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
 
         {/* APP 5: ANDROID SETUP GUIDE & APK DOWNLOAD */}
         {activeApp === 'setup_guide' && (
-          <div className="flex-1 space-y-3 text-xs text-slate-200 overflow-y-auto pr-1">
-            <div className="text-center space-y-1">
+          <div className="flex-1 space-y-3 text-xs text-[#e3e2e6] overflow-y-auto pr-1">
+            <div className="p-3.5 rounded-xl bg-[#1b1b1f] border border-white/8 space-y-2.5">
               <TextQBoardLogo size="sm" />
-              <h3 className="font-bold text-sm text-white mt-2">Text Q Board Android APK & Setup</h3>
-              <p className="text-[11px] text-cyan-300">GitHub Actions CI/CD Automated Build</p>
-            </div>
-
-            {/* GitHub Actions APK Build Card */}
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/80 via-slate-900 to-slate-950 border border-cyan-400/40 shadow-[0_0_20px_rgba(6,182,212,0.25)] space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-cyan-300 font-bold">
-                  <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" />
-                  <span>GitHub Automated APK Build</span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Workflow Ready</span>
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
-                Your repository <b className="text-cyan-200">shakil603/Text-Q-Board</b> contains the automated workflow <code className="text-cyan-300 bg-black/40 px-1 py-0.5 rounded">.github/workflows/build-apk.yml</code>. Whenever you push to GitHub or trigger the workflow, GitHub Actions automatically builds the Android APK.
+              <p className="text-[11px] text-[#c4c6d0] leading-relaxed">
+                Install the compiled APK from GitHub Actions to use <b>Text Q Board</b> as your system-wide Android keyboard across all apps.
               </p>
-              
-              <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                <a
-                  href="https://github.com/shakil603/Text-Q-Board/actions"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.4)] hover:brightness-110 active:scale-95 transition-all"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Open GitHub Actions & Download APK</span>
-                </a>
-              </div>
+              <a
+                href="https://github.com/shakil603/Text-Q-Board/actions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2 px-3 rounded-lg bg-[#a8c7fa] text-[#062e6f] font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-[#b8d2fc] transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Android APK</span>
+              </a>
             </div>
 
-            <div className="space-y-2 mt-2">
-              <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-between gap-2.5">
-                <div className="flex gap-2.5 items-start">
-                  <div className="w-5 h-5 rounded-full bg-cyan-500 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
-                    1
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">Enable Text Q Board in Settings</p>
-                    <p className="text-[11px] text-slate-400">Open Android On-Screen Keyboard settings and turn on <b>Text Q Board</b>.</p>
-                  </div>
+            <div className="space-y-2">
+              <div className="p-3 rounded-xl bg-[#1b1b1f] border border-white/8 flex items-center justify-between gap-2.5">
+                <div>
+                  <p className="font-semibold text-white">01. Enable in System Settings</p>
+                  <p className="text-[11px] text-[#9aa0a6]">Turn on Text Q Board in On-screen Keyboards</p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => openAndroidInputMethodSettings()}
-                  className="px-2.5 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold text-[11px] shrink-0 active:scale-95"
+                  className="px-2.5 py-1.5 rounded-lg bg-[#2f3036] text-[#a8c7fa] font-semibold text-[11px] shrink-0"
                 >
                   Enable
                 </button>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-between gap-2.5">
-                <div className="flex gap-2.5 items-start">
-                  <div className="w-5 h-5 rounded-full bg-cyan-500 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
-                    2
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">Select Default Input Method</p>
-                    <p className="text-[11px] text-slate-400">Choose <b>Text Q Board</b> in the input method picker dialog.</p>
-                  </div>
+              <div className="p-3 rounded-xl bg-[#1b1b1f] border border-white/8 flex items-center justify-between gap-2.5">
+                <div>
+                  <p className="font-semibold text-white">02. Select Input Method</p>
+                  <p className="text-[11px] text-[#9aa0a6]">Choose Text Q Board in the input method picker</p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => showAndroidInputMethodPicker()}
-                  className="px-2.5 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold text-[11px] shrink-0 active:scale-95"
+                  className="px-2.5 py-1.5 rounded-lg bg-[#2f3036] text-[#a8c7fa] font-semibold text-[11px] shrink-0"
                 >
                   Select
                 </button>
@@ -573,14 +506,14 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
         )}
       </div>
 
-      {/* 4. KEYBOARD CONTAINER SLOT (ANCHORED AT BOTTOM) */}
+      {/* 4. KEYBOARD CONTAINER SLOT */}
       <div className="w-full z-30">
         {children}
       </div>
 
-      {/* 5. ANDROID NAVIGATION BAR (BOTTOM GESTURE PILL) */}
-      <div className="h-4 w-full bg-black flex items-center justify-center select-none">
-        <div className="w-32 h-1 bg-slate-600 rounded-full" />
+      {/* 5. ANDROID NAVIGATION BAR */}
+      <div className="h-4 w-full bg-[#1b1b1f] flex items-center justify-center select-none">
+        <div className="w-32 h-1 bg-white/25 rounded-full" />
       </div>
     </div>
   );

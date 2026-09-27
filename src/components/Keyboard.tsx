@@ -1,27 +1,25 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  ArrowUp,
   Delete,
   CornerDownLeft,
   Globe,
-  Smile,
-  Mic,
-  Maximize2,
-  X,
   ChevronLeft,
   ChevronRight,
-  Move,
-  Space
+  Maximize2,
+  Move
 } from 'lucide-react';
 import {
-  KeyboardLayoutDef,
-  KeyboardSettings,
   KeyDef,
+  KeyboardSettings,
   LanguageId,
-  ThemeConfig,
-  ToolbarView
+  ThemeConfig
 } from '../types/keyboard';
-import { getLayoutForLanguage, NUMBER_ROW_KEYS, SYMBOLS_1_LAYOUT, SYMBOLS_2_LAYOUT } from '../data/layouts';
+import {
+  getLayoutForLanguage,
+  NUMBER_ROW_KEYS,
+  SYMBOLS_1_LAYOUT,
+  SYMBOLS_2_LAYOUT
+} from '../data/layouts';
 import { soundEngine } from '../utils/audio';
 import { matchGlideGesture } from '../utils/dictionary';
 import { showAndroidInputMethodPicker } from '../utils/androidBridge';
@@ -44,7 +42,7 @@ interface KeyboardProps {
 
 const LANGUAGE_LABELS: Record<string, string> = {
   en_us: 'English (US)',
-  bn_phonetic: 'বাংলা (ফোনেটিক)',
+  bn_phonetic: 'বাংলা • English',
   bn_jatiya: 'বাংলা (জাতীয়)',
   bn_probhat: 'বাংলা (प्रभात)',
   es_es: 'Español',
@@ -65,116 +63,148 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   onMoveCursor,
   onLanguageChange,
   onOpenEmojiPanel,
-  onOpenVoiceModal,
   onOpenSettings,
   onToggleFloating,
   onToggleOneHanded,
 }) => {
-  // Mode states
+  // Shift & Caps Lock State
   const [isShifted, setIsShifted] = useState(false);
   const [isCapsLock, setIsCapsLock] = useState(false);
-  const [symbolsMode, setSymbolsMode] = useState<'none' | 'symbols_1' | 'symbols_2'>('none');
-  const [pressedKey, setPressedKey] = useState<string | null>(null);
-  const [popupKey, setPopupKey] = useState<{ key: KeyDef; rect: DOMRect } | null>(null);
-  const [languageToast, setLanguageToast] = useState<string | null>(null);
+  const lastShiftTapRef = useRef<number>(0);
 
-  // Long press timer ref
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Symbols Layer State: 'none' | 'sym1' | 'sym2'
+  const [symbolsMode, setSymbolsMode] = useState<'none' | 'sym1' | 'sym2'>('none');
+
+  // Active Pressed Key (for flat active state & Gboard key-press preview bubble)
+  const [pressedKeyId, setPressedKeyId] = useState<string | null>(null);
+  const [pressedCharPreview, setPressedCharPreview] = useState<{
+    char: string;
+    keyId: string;
+  } | null>(null);
+
+  // Long Press Popup Menu State
+  const [popupKey, setPopupKey] = useState<{
+    key: KeyDef;
+    rect: DOMRect;
+  } | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressTriggeredRef = useRef(false);
 
-  // Spacebar swipe cursor drag state
+  // Continuous Backspace Hold Repeat Timer
+  const backspaceHoldDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const backspaceRepeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Spacebar Cursor Control Drag State
+  const spaceStartXRef = useRef<number>(0);
   const isDraggingSpaceRef = useRef(false);
-  const spaceStartXRef = useRef(0);
+  const didMoveSpaceCursorRef = useRef(false);
 
-  // Backspace swipe delete state
+  // Backspace Gesture Delete State
+  const backspaceStartXRef = useRef<number>(0);
   const isDraggingBackspaceRef = useRef(false);
-  const backspaceStartXRef = useRef(0);
 
-  // Glide Typing Canvas ref
+  // Double Space Period Tracking
+  const lastSpaceTapRef = useRef<number>(0);
+
+  // Glide Typing Trail Canvas
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isGlidingRef = useRef(false);
   const glidePointsRef = useRef<{ x: number; y: number }[]>([]);
 
-  // Active Layout
-  const activeLayout: KeyboardLayoutDef = (() => {
-    if (symbolsMode === 'symbols_1') return SYMBOLS_1_LAYOUT;
-    if (symbolsMode === 'symbols_2') return SYMBOLS_2_LAYOUT;
+  // Language switch toast
+  const [languageToast, setLanguageToast] = useState<string | null>(null);
+
+  // Determine current active layout
+  const activeLayout = (() => {
+    if (symbolsMode === 'sym1') return SYMBOLS_1_LAYOUT;
+    if (symbolsMode === 'sym2') return SYMBOLS_2_LAYOUT;
     return getLayoutForLanguage(settings.activeLanguage);
   })();
 
-  // Shift double-click for caps lock
-  const lastShiftTapRef = useRef<number>(0);
-
-  const handleShiftClick = () => {
-    soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
-    if (settings.hapticFeedback) soundEngine.triggerHaptic(8);
-
-    const now = Date.now();
-    if (now - lastShiftTapRef.current < 350) {
-      // Double tap = Caps Lock
-      setIsCapsLock(!isCapsLock);
-      setIsShifted(true);
-    } else {
-      if (isCapsLock) {
-        setIsCapsLock(false);
-        setIsShifted(false);
-      } else {
-        setIsShifted(!isShifted);
-      }
+  const clearTimers = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
     }
-    lastShiftTapRef.current = now;
-  };
+    if (backspaceHoldDelayRef.current) {
+      clearTimeout(backspaceHoldDelayRef.current);
+      backspaceHoldDelayRef.current = null;
+    }
+    if (backspaceRepeatIntervalRef.current) {
+      clearInterval(backspaceRepeatIntervalRef.current);
+      backspaceRepeatIntervalRef.current = null;
+    }
+  }, []);
 
-  // Switch Language (Globe key)
-  const handleNextLanguage = () => {
-    soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
-    const enabled = settings.enabledLanguages;
-    if (enabled.length <= 1) return;
+  useEffect(() => {
+    return () => clearTimers();
+  }, [clearTimers]);
 
-    const currentIdx = enabled.indexOf(settings.activeLanguage);
-    const nextIdx = (currentIdx + 1) % enabled.length;
-    const nextLang = enabled[nextIdx];
+  // Switch to next enabled language
+  const handleCycleLanguage = () => {
+    const enabled =
+      settings.enabledLanguages.length > 0
+        ? settings.enabledLanguages
+        : (['en_us', 'bn_phonetic'] as LanguageId[]);
+    const currentIndex = enabled.indexOf(settings.activeLanguage);
+    const nextIndex = (currentIndex + 1) % enabled.length;
+    const nextLang = enabled[nextIndex];
     onLanguageChange(nextLang);
+    setSymbolsMode('none');
 
-    // Show toast
-    const langNames: Record<string, string> = {
-      en_us: 'English (US)',
-      bn_phonetic: 'বাংলা (Phonetic)',
-      bn_jatiya: 'বাংলা (জাতীয়)',
-      bn_probhat: 'বাংলা (प्रभात)',
-      es_es: 'Español',
-      fr_fr: 'Français',
-      de_de: 'Deutsch',
-      ar_sa: 'العربية',
-      hi_in: 'हिन्दी',
-      ru_ru: 'Русский',
-    };
-    setLanguageToast(langNames[nextLang] || nextLang);
-    setTimeout(() => setLanguageToast(null), 1200);
+    setLanguageToast(LANGUAGE_LABELS[nextLang] || nextLang.toUpperCase());
+    setTimeout(() => setLanguageToast(null), 1100);
   };
 
-  // Handle standard key tap
-  const handleKeyTap = (key: KeyDef) => {
-    if (isLongPressTriggeredRef.current) return;
-
-    if (settings.hapticFeedback) soundEngine.triggerHaptic(10);
-
-    if (key.actionId) {
-      if (key.actionId === 'switch_symbols_1') setSymbolsMode('symbols_1');
-      if (key.actionId === 'switch_symbols_2') setSymbolsMode('symbols_2');
-      if (key.actionId === 'switch_letters') setSymbolsMode('none');
-      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+  // Handle key action execution
+  const executeKeyAction = (key: KeyDef) => {
+    if (isLongPressTriggeredRef.current) {
+      isLongPressTriggeredRef.current = false;
       return;
     }
 
-    switch (key.type) {
-      case 'shift':
-        handleShiftClick();
+    if (settings.hapticFeedback) {
+      soundEngine.triggerHaptic(10);
+    }
+
+    // Custom actionIds for symbol switching
+    if (key.actionId === 'switch_symbols_2') {
+      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+      setSymbolsMode('sym2');
+      return;
+    }
+    if (key.actionId === 'switch_symbols_1') {
+      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+      setSymbolsMode('sym1');
+      return;
+    }
+    if (key.actionId === 'switch_letters') {
+      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+      setSymbolsMode('none');
+      return;
+    }
+
+    const type = key.type || 'char';
+
+    switch (type) {
+      case 'shift': {
+        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+        const now = Date.now();
+        if (now - lastShiftTapRef.current < 300) {
+          setIsCapsLock(true);
+          setIsShifted(true);
+        } else if (isCapsLock) {
+          setIsCapsLock(false);
+          setIsShifted(false);
+        } else {
+          setIsShifted(!isShifted);
+        }
+        lastShiftTapRef.current = now;
         break;
+      }
 
       case 'backspace':
-        soundEngine.playKeyClick('backspace', settings.soundOnKeypress ? settings.soundVolume : 0);
-        onDeleteText(1);
+        // Handled immediately on pointerDown + repeat interval
         break;
 
       case 'enter':
@@ -182,22 +212,37 @@ export const Keyboard: React.FC<KeyboardProps> = ({
         onEnter();
         break;
 
-      case 'space':
+      case 'space': {
+        if (didMoveSpaceCursorRef.current) {
+          didMoveSpaceCursorRef.current = false;
+          return;
+        }
         soundEngine.playKeyClick('space', settings.soundOnKeypress ? settings.soundVolume : 0);
+        const now = Date.now();
+        if (settings.doubleSpacePeriod && now - lastSpaceTapRef.current < 280) {
+          onDeleteText(1);
+          onInsertText('. ');
+          lastSpaceTapRef.current = 0;
+          return;
+        }
+        lastSpaceTapRef.current = now;
+
         if (onSpacebar) {
           onSpacebar();
         } else {
           onInsertText(' ');
         }
         break;
+      }
 
       case 'symbols':
         soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
-        setSymbolsMode(symbolsMode === 'none' ? 'symbols_1' : 'none');
+        setSymbolsMode((prev) => (prev === 'none' ? 'sym1' : 'none'));
         break;
 
       case 'globe':
-        handleNextLanguage();
+        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+        handleCycleLanguage();
         break;
 
       case 'emoji':
@@ -205,47 +250,89 @@ export const Keyboard: React.FC<KeyboardProps> = ({
         onOpenEmojiPanel();
         break;
 
-      case 'voice':
-        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
-        onOpenVoiceModal();
-        break;
-
       case 'char':
-      default:
+      default: {
         soundEngine.playKeyClick('standard', settings.soundOnKeypress ? settings.soundVolume : 0);
-        const char = (isShifted || isCapsLock) ? key.primary.toUpperCase() : key.primary.toLowerCase();
-        onInsertText(char);
+        let charToInsert = key.primary;
 
-        // Turn off shift after 1 character if not in caps lock
+        if (isShifted || isCapsLock) {
+          if (
+            key.secondary &&
+            (settings.activeLanguage === 'bn_jatiya' || settings.activeLanguage === 'bn_probhat')
+          ) {
+            charToInsert = key.secondary;
+          } else {
+            charToInsert = key.primary.toUpperCase();
+          }
+        }
+
+        onInsertText(charToInsert);
+
         if (isShifted && !isCapsLock) {
           setIsShifted(false);
         }
         break;
+      }
     }
   };
 
-  // Long press start
-  const handleKeyPointerDown = (key: KeyDef, e: React.PointerEvent<HTMLButtonElement>) => {
-    setPressedKey(key.primary);
+  // Pointer Down on a key
+  const handleKeyPointerDown = (
+    key: KeyDef,
+    keyId: string,
+    displayChar: string,
+    e: React.PointerEvent<HTMLButtonElement>
+  ) => {
+    clearTimers();
+    setPressedKeyId(keyId);
     isLongPressTriggeredRef.current = false;
 
-    // If spacebar, initialize cursor drag tracking
-    if (key.type === 'space' && settings.gestureCursorControl) {
+    const type = key.type || 'char';
+
+    // Show Gboard Key Preview Bubble for character keys
+    if (
+      settings.popupOnKeypress &&
+      type === 'char' &&
+      !key.actionId &&
+      displayChar.length <= 2
+    ) {
+      setPressedCharPreview({ char: displayChar, keyId });
+    } else {
+      setPressedCharPreview(null);
+    }
+
+    // Immediate delete + continuous repeat when holding Backspace
+    if (type === 'backspace') {
+      soundEngine.playKeyClick('backspace', settings.soundOnKeypress ? settings.soundVolume : 0);
+      if (settings.hapticFeedback) soundEngine.triggerHaptic(10);
+      onDeleteText(1);
+
+      if (settings.gestureDelete) {
+        isDraggingBackspaceRef.current = true;
+        backspaceStartXRef.current = e.clientX;
+      }
+
+      backspaceHoldDelayRef.current = setTimeout(() => {
+        backspaceRepeatIntervalRef.current = setInterval(() => {
+          onDeleteText(1);
+        }, 55);
+      }, 320);
+      return;
+    }
+
+    // Spacebar cursor slide setup
+    if (type === 'space' && settings.gestureCursorControl) {
       isDraggingSpaceRef.current = true;
+      didMoveSpaceCursorRef.current = false;
       spaceStartXRef.current = e.clientX;
     }
 
-    // If backspace, initialize swipe delete tracking
-    if (key.type === 'backspace' && settings.gestureDelete) {
-      isDraggingBackspaceRef.current = true;
-      backspaceStartXRef.current = e.clientX;
-    }
-
     // Long press on Globe key opens Android Input Method Picker
-    if (key.type === 'globe') {
+    if (type === 'globe') {
       longPressTimerRef.current = setTimeout(() => {
         isLongPressTriggeredRef.current = true;
-        if (settings.hapticFeedback) soundEngine.triggerHaptic(20);
+        setPressedKeyId(null);
+        if (settings.hapticFeedback) soundEngine.triggerHaptic(18);
         const opened = showAndroidInputMethodPicker();
         if (!opened) {
           onOpenSettings();
@@ -259,27 +346,52 @@ export const Keyboard: React.FC<KeyboardProps> = ({
       const rect = e.currentTarget.getBoundingClientRect();
       longPressTimerRef.current = setTimeout(() => {
         isLongPressTriggeredRef.current = true;
+        setPressedCharPreview(null);
         setPopupKey({ key, rect });
-        if (settings.hapticFeedback) soundEngine.triggerHaptic(20);
+        if (settings.hapticFeedback) soundEngine.triggerHaptic(18);
+      }, settings.longPressDelay || 350);
+    } else if (key.secondary && symbolsMode === 'none') {
+      // If a key has a secondary character (e.g., top row numbers 1-0), long press inserts it directly
+      const rect = e.currentTarget.getBoundingClientRect();
+      longPressTimerRef.current = setTimeout(() => {
+        isLongPressTriggeredRef.current = true;
+        setPressedCharPreview(null);
+        setPopupKey({
+          key: { ...key, popup: [key.secondary!] },
+          rect,
+        });
+        if (settings.hapticFeedback) soundEngine.triggerHaptic(18);
       }, settings.longPressDelay || 350);
     }
   };
 
-  const handleKeyPointerUp = () => {
-    setPressedKey(null);
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
+  const handleKeyPointerUp = (key: KeyDef) => {
+    setPressedKeyId(null);
+    setPressedCharPreview(null);
+    clearTimers();
+
+    if (!isGlidingRef.current || glidePointsRef.current.length <= 6) {
+      executeKeyAction(key);
     }
+
     isDraggingSpaceRef.current = false;
     isDraggingBackspaceRef.current = false;
   };
 
+  const handleKeyPointerLeave = () => {
+    setPressedKeyId(null);
+    setPressedCharPreview(null);
+    if (backspaceHoldDelayRef.current || backspaceRepeatIntervalRef.current) {
+      clearTimers();
+    }
+  };
+
   // Pointer move on spacebar or backspace
   const handlePointerMove = (e: React.PointerEvent) => {
-    // Spacebar cursor move
     if (isDraggingSpaceRef.current) {
       const deltaX = e.clientX - spaceStartXRef.current;
-      if (Math.abs(deltaX) > 16) {
+      if (Math.abs(deltaX) > 14) {
+        didMoveSpaceCursorRef.current = true;
         if (deltaX > 0) {
           onMoveCursor('right');
         } else {
@@ -290,18 +402,17 @@ export const Keyboard: React.FC<KeyboardProps> = ({
       }
     }
 
-    // Backspace swipe delete
     if (isDraggingBackspaceRef.current) {
       const deltaX = backspaceStartXRef.current - e.clientX;
-      if (deltaX > 35) {
+      if (deltaX > 28) {
         onDeleteText(1);
         backspaceStartXRef.current = e.clientX;
-        if (settings.hapticFeedback) soundEngine.triggerHaptic(12);
+        if (settings.hapticFeedback) soundEngine.triggerHaptic(8);
       }
     }
   };
 
-  // --- GLIDE TYPING ENGINE (SWIPE ON KEYBOARD) ---
+  // --- GLIDE TYPING ENGINE ---
   const handleGlidePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!settings.glideTyping) return;
     const canvas = canvasRef.current;
@@ -326,25 +437,28 @@ export const Keyboard: React.FC<KeyboardProps> = ({
 
     glidePointsRef.current.push({ x, y });
 
-    // Draw neon trail
-    if (settings.showGestureTrail) {
+    if (glidePointsRef.current.length > 6) {
+      setPressedCharPreview(null);
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    }
+
+    if (settings.showGestureTrail && glidePointsRef.current.length > 3) {
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = theme.trailColor || '#06b6d4';
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = theme.trailColor || '#a8c7fa';
+        ctx.lineWidth = 3.5;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.shadowColor = theme.trailColor || '#06b6d4';
-        ctx.shadowBlur = 10;
 
         ctx.beginPath();
         const pts = glidePointsRef.current;
-        if (pts.length > 0) {
-          ctx.moveTo(pts[0].x, pts[0].y);
-          for (let i = 1; i < pts.length; i++) {
-            ctx.lineTo(pts[i].x, pts[i].y);
-          }
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i].x, pts[i].y);
         }
         ctx.stroke();
       }
@@ -361,10 +475,9 @@ export const Keyboard: React.FC<KeyboardProps> = ({
       if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    if (glidePointsRef.current.length > 6) {
+    if (glidePointsRef.current.length > 8) {
       const rect = canvas?.getBoundingClientRect();
       if (rect) {
-        // Normalize points
         const normalized = glidePointsRef.current.map((p) => ({
           x: p.x / rect.width,
           y: p.y / rect.height,
@@ -373,14 +486,14 @@ export const Keyboard: React.FC<KeyboardProps> = ({
         if (matchedWord) {
           onInsertText(matchedWord + ' ');
           soundEngine.playKeyClick('standard', settings.soundOnKeypress ? settings.soundVolume : 0);
-          if (settings.hapticFeedback) soundEngine.triggerHaptic(15);
+          if (settings.hapticFeedback) soundEngine.triggerHaptic(12);
         }
       }
     }
     glidePointsRef.current = [];
   };
 
-  // Close long-press popup when tapping anywhere outside
+  // Close long-press popup when tapping outside
   useEffect(() => {
     const handleGlobalClick = () => {
       if (popupKey) setPopupKey(null);
@@ -389,51 +502,58 @@ export const Keyboard: React.FC<KeyboardProps> = ({
     return () => window.removeEventListener('pointerup', handleGlobalClick);
   }, [popupKey]);
 
+  const rowHeightClass =
+    settings.keyboardHeight === 'short'
+      ? 'h-[41px]'
+      : settings.keyboardHeight === 'tall'
+      ? 'h-[50px]'
+      : 'h-[45px]';
+
   return (
     <div
       onPointerMove={handlePointerMove}
-      className={`relative w-full select-none transition-all duration-200 pb-2 ${theme.boardBg} ${
+      className={`relative w-full select-none pb-1.5 pt-1 ${theme.boardBg} ${
         settings.oneHandedMode === 'left'
-          ? 'max-w-[85%] mr-auto'
+          ? 'max-w-[84%] mr-auto'
           : settings.oneHandedMode === 'right'
-          ? 'max-w-[85%] ml-auto'
+          ? 'max-w-[84%] ml-auto'
           : 'w-full'
       }`}
     >
-      {/* Toast popup for language change */}
+      {/* Language Switch Pill Toast */}
       {languageToast && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40 px-3 py-1 rounded-full bg-cyan-950 text-cyan-200 text-xs font-bold border border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.4)] animate-bounce">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1 rounded-full bg-[#2f3036] text-[#e3e2e6] text-xs font-medium shadow-md border border-white/10">
           {languageToast}
         </div>
       )}
 
-      {/* Floating Keyboard Drag Header (if floating) */}
+      {/* Floating Keyboard Header */}
       {settings.isFloating && (
-        <div className="h-6 w-full flex items-center justify-between px-2 bg-black/40 border-b border-white/5 cursor-grab">
-          <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
-            <Move className="w-3 h-3 text-cyan-400" />
-            <span>Floating Text Q Board</span>
+        <div className="h-6 w-full flex items-center justify-between px-3 bg-black/20 border-b border-white/5">
+          <span className="text-[11px] text-[#c4c6d0] font-medium flex items-center gap-1.5">
+            <Move className="w-3 h-3" />
+            <span>Floating Keyboard</span>
           </span>
           <button
             onClick={onToggleFloating}
-            className="p-0.5 rounded text-slate-400 hover:text-white"
+            className="p-0.5 rounded text-[#c4c6d0] hover:text-white"
           >
             <Maximize2 className="w-3 h-3" />
           </button>
         </div>
       )}
 
-      {/* One-Handed Mode Side Controls */}
+      {/* One-Handed Mode Side Gutter Controls */}
       {settings.oneHandedMode !== 'off' && (
         <div
           className={`absolute top-0 bottom-0 flex flex-col justify-around py-6 z-30 px-1 ${
-            settings.oneHandedMode === 'left' ? 'left-[86%]' : 'right-[86%]'
+            settings.oneHandedMode === 'left' ? 'left-[85%]' : 'right-[85%]'
           }`}
         >
           <button
             onClick={() => onToggleOneHanded('off')}
-            className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center shadow-md hover:bg-cyan-900 active:scale-95"
-            title="Expand to Full Keyboard"
+            className="w-8 h-8 rounded-full bg-[#2f3036] text-[#e3e2e6] flex items-center justify-center"
+            title="Full Width Keyboard"
           >
             <Maximize2 className="w-3.5 h-3.5" />
           </button>
@@ -441,8 +561,8 @@ export const Keyboard: React.FC<KeyboardProps> = ({
             onClick={() =>
               onToggleOneHanded(settings.oneHandedMode === 'left' ? 'right' : 'left')
             }
-            className="w-8 h-8 rounded-full bg-slate-800 text-cyan-300 flex items-center justify-center shadow-md hover:bg-cyan-900 active:scale-95"
-            title="Switch Side"
+            className="w-8 h-8 rounded-full bg-[#2f3036] text-[#a8c7fa] flex items-center justify-center"
+            title="Switch Hand Side"
           >
             {settings.oneHandedMode === 'left' ? (
               <ChevronRight className="w-4 h-4" />
@@ -453,140 +573,226 @@ export const Keyboard: React.FC<KeyboardProps> = ({
         </div>
       )}
 
-      {/* Gesture Glide Canvas Overlay */}
+      {/* Glide Typing Trail Canvas */}
       <canvas
         ref={canvasRef}
         width={400}
-        height={220}
+        height={240}
         className="absolute inset-0 pointer-events-none z-20 w-full h-full"
       />
 
-      {/* Keyboard Key Rows Container */}
+      {/* Keyboard Rows Container (Exact Gboard Spacing & Proportions) */}
       <div
         onPointerDown={handleGlidePointerDown}
         onPointerMove={handleGlidePointerMove}
         onPointerUp={handleGlidePointerUp}
-        className="flex flex-col gap-1.5 p-1.5 pt-2 relative z-10"
+        className="flex flex-col gap-[6px] px-1.5 relative z-10"
       >
-        {/* OPTIONAL NUMBER ROW (1-9-0) */}
+        {/* NUMBER ROW (1 2 3 4 5 6 7 8 9 0) */}
         {settings.showNumberRow && symbolsMode === 'none' && (
-          <div className="flex gap-1 justify-center w-full">
-            {NUMBER_ROW_KEYS.map((key) => (
-              <button
-                key={key.primary}
-                onClick={() => handleKeyTap({ primary: key.primary, type: 'char' })}
-                className={`flex-1 h-10 rounded-lg text-sm font-semibold flex flex-col items-center justify-center transition-all ${theme.keyBg} ${
-                  settings.keyBorders ? theme.keyBorder : ''
-                } ${theme.textPrimary} hover:brightness-125 active:scale-95`}
-              >
-                <span>{key.primary}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* MAIN KEYBOARD ROWS */}
-        {activeLayout.rows.map((row, rowIdx) => (
-          <div key={rowIdx} className="flex gap-1 justify-center w-full">
-            {row.keys.map((key, keyIdx) => {
-              const isSpecial =
-                key.type === 'shift' ||
-                key.type === 'backspace' ||
-                key.type === 'enter' ||
-                key.type === 'symbols' ||
-                key.type === 'globe';
-
-              const flexBasis = key.width ? `${key.width * 10}%` : '9%';
-              const isSpace = key.type === 'space';
-              const isShift = key.type === 'shift';
-
-              const displayPrimary = (() => {
-                if (key.type === 'char') {
-                  return isShifted || isCapsLock ? key.primary.toUpperCase() : key.primary.toLowerCase();
-                }
-                return key.primary;
-              })();
-
+          <div className="flex gap-[5px] justify-center w-full">
+            {NUMBER_ROW_KEYS.map((key, idx) => {
+              const keyId = `num-${idx}`;
+              const isPressed = pressedKeyId === keyId;
               return (
                 <button
-                  key={`${key.primary}-${keyIdx}`}
-                  style={{ flex: key.width || 1 }}
-                  onPointerDown={(e) => handleKeyPointerDown(key, e)}
-                  onPointerUp={handleKeyPointerUp}
-                  onClick={() => handleKeyTap(key)}
-                  className={`relative h-11 rounded-lg flex flex-col items-center justify-center select-none font-medium transition-transform active:scale-95 ${
-                    isSpecial ? theme.keySpecialBg : theme.keyBg
-                  } ${settings.keyBorders ? theme.keyBorder : ''} ${
-                    pressedKey === key.primary ? theme.keyGlow : ''
-                  } ${
-                    isShift && (isShifted || isCapsLock)
-                      ? 'bg-cyan-500 text-slate-950 shadow-[0_0_15px_#22d3ee]'
-                      : isSpecial
-                      ? theme.textSecondary
-                      : theme.textPrimary
-                  } hover:brightness-110 active:brightness-90`}
+                  key={key.primary}
+                  type="button"
+                  onPointerDown={(e) =>
+                    handleKeyPointerDown(
+                      { primary: key.primary, type: 'char' },
+                      keyId,
+                      key.primary,
+                      e
+                    )
+                  }
+                  onPointerUp={() => handleKeyPointerUp({ primary: key.primary, type: 'char' })}
+                  onPointerLeave={handleKeyPointerLeave}
+                  className={`relative flex-1 h-[38px] rounded-[6px] text-[15px] font-normal flex items-center justify-center select-none transition-colors duration-75 ${
+                    isPressed ? theme.keyActiveBg : theme.keyBg
+                  } ${settings.keyBorders ? theme.keyBorder : ''} ${theme.textPrimary}`}
                 >
-                  {/* Secondary small label on key top right */}
-                  {key.secondary && symbolsMode === 'none' && !isShifted && !isCapsLock && (
-                    <span className="absolute top-0.5 right-1 text-[9px] text-cyan-300/50 font-mono">
-                      {key.secondary}
-                    </span>
-                  )}
-
-                  {/* Primary Key Content */}
-                  {isShift ? (
-                    <div className="flex flex-col items-center justify-center">
-                      <ArrowUp
-                        className={`w-4 h-4 ${
-                          isCapsLock ? 'stroke-[3]' : 'stroke-[2]'
-                        }`}
-                      />
-                      {isCapsLock && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-900 mt-0.5" />
-                      )}
-                    </div>
-                  ) : key.type === 'backspace' ? (
-                    <Delete className="w-5 h-5 text-cyan-200" />
-                  ) : key.type === 'enter' ? (
-                    <CornerDownLeft className="w-5 h-5 text-cyan-300" />
-                  ) : key.type === 'globe' ? (
-                    <Globe className="w-4 h-4 text-cyan-300" />
-                  ) : isSpace ? (
-                    <div className="flex items-center gap-1 text-xs text-slate-300/90 font-medium tracking-wide">
-                      <span>{LANGUAGE_LABELS[settings.activeLanguage] || displayPrimary}</span>
-                    </div>
-                  ) : (
-                    <span className="text-base font-medium">{displayPrimary}</span>
-                  )}
-
-                  {/* Keypress Pop-up Preview Bubble */}
-                  {settings.popupOnKeypress && pressedKey === key.primary && !isSpecial && (
+                  {pressedCharPreview?.keyId === keyId && (
                     <div
-                      className={`absolute -top-12 left-1/2 -translate-x-1/2 w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold z-50 pointer-events-none animate-in zoom-in-75 ${theme.previewBg}`}
+                      className={`absolute -top-12 left-1/2 -translate-x-1/2 w-11 h-12 rounded-xl flex items-center justify-center text-xl font-medium z-50 pointer-events-none ${theme.previewBg}`}
                     >
-                      {displayPrimary}
+                      {pressedCharPreview.char}
                     </div>
                   )}
+                  <span>{key.primary}</span>
                 </button>
               );
             })}
           </div>
-        ))}
+        )}
+
+        {/* MAIN KEYBOARD ROWS */}
+        {activeLayout.rows.map((row, rowIdx) => {
+          // Authentic Gboard Row 2 stagger: 9-key middle alphabet rows get 4.8% side padding
+          const isNineKeyAlphabetRow =
+            rowIdx === 1 &&
+            row.keys.length === 9 &&
+            row.keys.every((k) => !k.type || k.type === 'char');
+
+          return (
+            <div
+              key={rowIdx}
+              className={`flex gap-[5px] justify-center w-full ${
+                isNineKeyAlphabetRow ? 'px-[4.8%]' : ''
+              }`}
+            >
+              {row.keys.map((key, keyIdx) => {
+                const keyId = `r${rowIdx}-k${keyIdx}`;
+                const isPressed = pressedKeyId === keyId;
+                const type = key.type || 'char';
+
+                const isEnter = type === 'enter';
+                const isShift = type === 'shift';
+                const isBackspace = type === 'backspace';
+                const isSpace = type === 'space';
+                const isGlobe = type === 'globe';
+                const isSymbols = type === 'symbols' || Boolean(key.actionId);
+                const isPunctuationSideKey =
+                  rowIdx === 3 && (key.primary === ',' || key.primary === '.' || key.primary === '।' || key.primary === '্');
+
+                const isFunctional =
+                  isShift || isBackspace || isSymbols || isGlobe || isPunctuationSideKey;
+
+                const displayPrimary = (() => {
+                  if (type === 'char' && !key.actionId) {
+                    if (
+                      (isShifted || isCapsLock) &&
+                      key.secondary &&
+                      (settings.activeLanguage === 'bn_jatiya' ||
+                        settings.activeLanguage === 'bn_probhat')
+                    ) {
+                      return key.secondary;
+                    }
+                    return isShifted || isCapsLock
+                      ? key.primary.toUpperCase()
+                      : key.primary;
+                  }
+                  return key.primary;
+                })();
+
+                // Determine Flat Material 3 Key Surface Color
+                let surfaceClass = isPressed ? theme.keyActiveBg : theme.keyBg;
+                let textClass = theme.textPrimary;
+                let radiusClass = 'rounded-[6px]';
+
+                if (isEnter) {
+                  // Authentic Gboard Material You Pill Enter Key
+                  surfaceClass = theme.accent;
+                  textClass = theme.accentText;
+                  radiusClass = 'rounded-full';
+                } else if (isShift && (isShifted || isCapsLock)) {
+                  surfaceClass = theme.accent;
+                  textClass = theme.accentText;
+                } else if (isFunctional) {
+                  surfaceClass = isPressed ? theme.keySpecialActiveBg : theme.keySpecialBg;
+                  textClass = theme.textSecondary;
+                }
+
+                return (
+                  <button
+                    key={keyId}
+                    type="button"
+                    style={{ flex: key.width || 1 }}
+                    onPointerDown={(e) =>
+                      handleKeyPointerDown(key, keyId, displayPrimary, e)
+                    }
+                    onPointerUp={() => handleKeyPointerUp(key)}
+                    onPointerLeave={handleKeyPointerLeave}
+                    className={`relative ${rowHeightClass} ${radiusClass} flex flex-col items-center justify-center select-none transition-colors duration-75 ${surfaceClass} ${
+                      settings.keyBorders && !isEnter ? theme.keyBorder : ''
+                    } ${textClass}`}
+                  >
+                    {/* Gboard Key-Press Preview Bubble */}
+                    {pressedCharPreview?.keyId === keyId && (
+                      <div
+                        className={`absolute -top-12 left-1/2 -translate-x-1/2 min-w-[44px] h-12 px-2.5 rounded-xl flex items-center justify-center text-[22px] font-medium z-50 pointer-events-none ${theme.previewBg}`}
+                      >
+                        {pressedCharPreview.char}
+                      </div>
+                    )}
+
+                    {/* Top-right secondary superscript label (Gboard style) */}
+                    {key.secondary &&
+                      symbolsMode === 'none' &&
+                      !isShifted &&
+                      !isCapsLock &&
+                      !isFunctional && (
+                        <span
+                          className={`absolute top-1 right-1.5 text-[9px] leading-none opacity-65 font-normal ${theme.textSecondary}`}
+                        >
+                          {key.secondary}
+                        </span>
+                      )}
+
+                    {/* Main Key Content */}
+                    {isBackspace ? (
+                      <Delete className="w-[19px] h-[19px] stroke-[1.9]" />
+                    ) : isEnter ? (
+                      <CornerDownLeft className="w-[19px] h-[19px] stroke-[2.2]" />
+                    ) : isShift ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill={isShifted || isCapsLock ? 'currentColor' : 'none'}
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M12 4L4 13h5v6h6v-6h5L12 4z" />
+                        </svg>
+                        {isCapsLock && (
+                          <span className="w-2.5 h-[2px] bg-current rounded-full mt-0.5" />
+                        )}
+                      </div>
+                    ) : isGlobe ? (
+                      <Globe className="w-[18px] h-[18px] stroke-[1.8]" />
+                    ) : isSpace ? (
+                      <span className="text-[12px] font-normal opacity-80 tracking-normal truncate max-w-[140px]">
+                        {LANGUAGE_LABELS[settings.activeLanguage] || displayPrimary}
+                      </span>
+                    ) : isSymbols ? (
+                      <span className="text-[13px] font-medium tracking-tight">
+                        {displayPrimary}
+                      </span>
+                    ) : (
+                      <span className="text-[18px] font-normal leading-none">
+                        {displayPrimary}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
 
-      {/* LONG-PRESS POPUP MENU (Accents & Numbers) */}
+      {/* LONG PRESS POPUP MENU (Accents, Symbols, Settings/Emoji shortcuts) */}
       {popupKey && (
         <div
           style={{
-            top: `${popupKey.rect.top - 55}px`,
-            left: `${popupKey.rect.left - 20}px`,
+            position: 'fixed',
+            left: Math.min(
+              Math.max(12, popupKey.rect.left - 16),
+              window.innerWidth - 220
+            ),
+            top: Math.max(12, popupKey.rect.top - 52),
           }}
-          className="fixed z-50 flex items-center gap-1 p-1.5 rounded-2xl bg-slate-900 border border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.6)] animate-in fade-in zoom-in-95"
+          className={`z-50 flex items-center gap-1 p-1.5 rounded-xl ${theme.previewBg}`}
         >
-          {popupKey.key.popup?.map((char) => (
+          {(popupKey.key.popup || [popupKey.key.primary]).map((char) => (
             <button
               key={char}
-              onClick={(e) => {
+              type="button"
+              onPointerDown={(e) => {
                 e.stopPropagation();
                 if (char === '⚙️') {
                   onOpenSettings();
@@ -596,9 +802,12 @@ export const Keyboard: React.FC<KeyboardProps> = ({
                   onInsertText(char);
                 }
                 setPopupKey(null);
-                soundEngine.playKeyClick('standard', settings.soundOnKeypress ? settings.soundVolume : 0);
+                soundEngine.playKeyClick(
+                  'standard',
+                  settings.soundOnKeypress ? settings.soundVolume : 0
+                );
               }}
-              className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-white font-bold text-sm flex items-center justify-center transition-all active:scale-95"
+              className="w-8 h-9 rounded-lg flex items-center justify-center text-sm font-medium hover:bg-white/15 active:bg-white/25 transition-colors"
             >
               {char}
             </button>
