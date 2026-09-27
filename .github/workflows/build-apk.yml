@@ -28,17 +28,20 @@ jobs:
           node-version: '22'
 
       - name: Set up Java JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android SDK Licenses
+      - name: Configure Android SDK & Accept Licenses
         run: |
-          yes | sdkmanager --licenses || true
+          ANDROID_SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=$ANDROID_SDK" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK" >> $GITHUB_ENV
+          SDKMANAGER=$(find "$ANDROID_SDK" -name "sdkmanager" -type f | head -n 1)
+          if [ -n "$SDKMANAGER" ]; then
+            yes | "$SDKMANAGER" --licenses || true
+          fi
 
       - name: Install Dependencies
         run: |
@@ -53,6 +56,7 @@ jobs:
           rm -rf android
           npx cap add android
           npx cap sync android
+          echo "sdk.dir=${ANDROID_HOME:-/usr/local/lib/android/sdk}" > android/local.properties
 
       - name: Grant Execute Permission for Gradle
         run: |
@@ -78,17 +82,14 @@ jobs:
 
       - name: Create Release with APK
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Text Q Board Android APK v1.0.${{ github.run_number }}
-          body: |
-            ### Text Q Board Android APK Release
-            - **App Name**: Text Q Board
-            - **Package**: `com.textqboard.app`
-            - **Build Number**: #${{ github.run_number }}
-            - **Features**: Complete Gboard replica with Bangla Phonetic (Avro), Jatiya & Probhat layouts, Cyber Cyan Theme, Glide Typing, Voice Typing, Clipboard Manager, Text Editing D-Pad, and Emoji Kitchen.
-          files: build-output/Text-Q-Board.apk
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v1.0.${{ github.run_number }}"
+          gh release create "$TAG" build-output/Text-Q-Board.apk \
+            --title "Text Q Board Android APK $TAG" \
+            --notes "### Text Q Board Android APK Release
+          - **App Name**: Text Q Board
+          - **Package**: com.textqboard.app
+          - **Build Number**: #${{ github.run_number }}
+          - **Features**: Complete Gboard replica with Bangla Phonetic (Avro), Jatiya & Probhat layouts, Cyber Cyan Theme, Glide Typing, Voice Typing, Clipboard Manager, Text Editing D-Pad, and Emoji Kitchen." || true
