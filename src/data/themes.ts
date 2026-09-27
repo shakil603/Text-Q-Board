@@ -161,4 +161,27 @@ export const KEYBOARD_THEMES: Record<ThemeId, ThemeConfig> = {
     previewBg: 'bg-[#463439] text-white shadow-md',
     isDark: true,
   },
+
+  // Custom Studio Palette Theme
+  custom: {
+    id: 'custom',
+    name: 'Custom Studio Board',
+    background: 'bg-[#111318]',
+    boardBg: 'bg-[#1b1b1f]',
+    keyBg: 'bg-[#2f3036]',
+    keyActiveBg: 'bg-[#44474f]',
+    keySpecialBg: 'bg-[#232429]',
+    keySpecialActiveBg: 'bg-[#373940]',
+    keyBorder: 'gboard-key-border',
+    keyGlow: '',
+    textPrimary: 'text-[#e3e2e6]',
+    textSecondary: 'text-[#c4c6d0]',
+    accent: 'bg-[#a8c7fa] hover:bg-[#b8d2fc]',
+    accentText: 'text-[#062e6f] font-semibold',
+    suggestionBg: 'bg-[#1b1b1f]',
+    suggestionActiveBg: 'bg-[#2f3036] text-[#a8c7fa]',
+    trailColor: '#a8c7fa',
+    previewBg: 'bg-[#373940] text-[#e3e2e6] shadow-md',
+    isDark: true,
+  },
 };

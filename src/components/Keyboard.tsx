@@ -23,6 +23,7 @@ import {
 import { soundEngine } from '../utils/audio';
 import { matchGlideGesture } from '../utils/dictionary';
 import { showAndroidInputMethodPicker } from '../utils/androidBridge';
+import { BoardBackground } from './BoardBackground';
 
 interface KeyboardProps {
   settings: KeyboardSettings;
@@ -512,7 +513,11 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   return (
     <div
       onPointerMove={handlePointerMove}
-      className={`relative w-full select-none pb-1.5 pt-1 ${theme.boardBg} ${
+      className={`relative w-full select-none pb-1.5 pt-1 overflow-hidden ${
+        !settings.customColors?.useCustomColors && !settings.isBlankBoard
+          ? theme.boardBg
+          : ''
+      } ${
         settings.oneHandedMode === 'left'
           ? 'max-w-[84%] mr-auto'
           : settings.oneHandedMode === 'right'
@@ -520,6 +525,16 @@ export const Keyboard: React.FC<KeyboardProps> = ({
           : 'w-full'
       }`}
     >
+      {/* Dynamic Animated Board Background, Wallpapers & Canvas FX */}
+      <BoardBackground
+        theme={theme}
+        animation={settings.boardAnimation || 'none'}
+        animationSpeed={settings.animationSpeed || 1}
+        mediaBackground={settings.mediaBackground}
+        customColors={settings.customColors}
+        isBlankBoard={settings.isBlankBoard}
+      />
+
       {/* Language Switch Pill Toast */}
       {languageToast && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1 rounded-full bg-[#2f3036] text-[#e3e2e6] text-xs font-medium shadow-md border border-white/10">

@@ -12,6 +12,8 @@ import {
   ChevronLeft,
   ChevronDown,
   EyeOff,
+  Volume2,
+  VolumeX,
   Music
 } from 'lucide-react';
 import { ThemeConfig, ToolbarView } from '../types/keyboard';
@@ -27,6 +29,9 @@ interface SuggestionStripProps {
   theme: ThemeConfig;
   incognito?: boolean;
   isTranslating?: boolean;
+  soundOnKeypress?: boolean;
+  bgMusicActive?: boolean;
+  onToggleSoundQuick?: () => void;
   onToggleFloating?: () => void;
   onToggleOneHanded?: () => void;
 }
@@ -41,6 +46,8 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
   onHideKeyboard,
   theme,
   incognito = false,
+  soundOnKeypress = true,
+  bgMusicActive = false,
   onToggleOneHanded,
 }) => {
   const isMenuOpen = activeToolbarView === 'more_tools';
@@ -66,7 +73,7 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
             ? `${theme.suggestionActiveBg}`
             : `${theme.textSecondary} hover:bg-white/10`
         }`}
-        title="Gboard Tools"
+        title="Keyboard Tools"
       >
         {activeToolbarView !== 'normal' ? (
           <ChevronLeft className="w-[18px] h-[18px]" />
@@ -114,6 +121,29 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
 
           <button
             type="button"
+            onClick={() =>
+              setActiveToolbarView(
+                activeToolbarView === 'sound_studio' ? 'normal' : 'sound_studio'
+              )
+            }
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'sound_studio'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
+            title="Typing Sound & Music Studio"
+          >
+            {bgMusicActive ? (
+              <Music className="w-[18px] h-[18px] text-[#a8c7fa]" />
+            ) : soundOnKeypress ? (
+              <Volume2 className="w-[18px] h-[18px]" />
+            ) : (
+              <VolumeX className="w-[18px] h-[18px] opacity-60" />
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveToolbarView('clipboard')}
             className={`p-2 rounded-full transition-colors ${
               activeToolbarView === 'clipboard'
@@ -136,19 +166,6 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
             title="Translate"
           >
             <Languages className="w-[18px] h-[18px]" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveToolbarView('sound_studio')}
-            className={`p-2 rounded-full transition-colors ${
-              activeToolbarView === 'sound_studio'
-                ? theme.suggestionActiveBg
-                : `${theme.textSecondary} hover:bg-white/10`
-            }`}
-            title="Sound & Music Studio"
-          >
-            <Music className="w-[18px] h-[18px]" />
           </button>
 
           <button
@@ -242,27 +259,51 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
         </div>
       )}
 
-      {/* Right Voice Typing Microphone Icon */}
-      <button
-        type="button"
-        onClick={onStartVoiceTyping}
-        className={`w-9 h-8 flex items-center justify-center rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10 active:bg-white/20`}
-        title="Voice Typing"
-      >
-        <Mic className="w-[18px] h-[18px]" />
-      </button>
-
-      {/* Optional Hide Keyboard Button (in Android System IME mode) */}
-      {onHideKeyboard && (
+      {/* Right Quick Sound/Music Studio Button & Voice Typing Microphone Icon */}
+      <div className="flex items-center gap-0.5 shrink-0">
         <button
           type="button"
-          onClick={onHideKeyboard}
-          className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10`}
-          title="Hide Keyboard"
+          onClick={() =>
+            setActiveToolbarView(
+              activeToolbarView === 'sound_studio' ? 'normal' : 'sound_studio'
+            )
+          }
+          className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+            activeToolbarView === 'sound_studio'
+              ? theme.suggestionActiveBg
+              : `${theme.textSecondary} hover:bg-white/10`
+          }`}
+          title="Typing Sound & Music"
         >
-          <ChevronDown className="w-[18px] h-[18px]" />
+          {bgMusicActive ? (
+            <Music className="w-[17px] h-[17px] text-[#a8c7fa]" />
+          ) : soundOnKeypress ? (
+            <Volume2 className="w-[17px] h-[17px]" />
+          ) : (
+            <VolumeX className="w-[17px] h-[17px] opacity-55" />
+          )}
         </button>
-      )}
+
+        <button
+          type="button"
+          onClick={onStartVoiceTyping}
+          className={`w-9 h-8 flex items-center justify-center rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10 active:bg-white/20`}
+          title="Voice Typing"
+        >
+          <Mic className="w-[18px] h-[18px]" />
+        </button>
+
+        {onHideKeyboard && (
+          <button
+            type="button"
+            onClick={onHideKeyboard}
+            className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10`}
+            title="Hide Keyboard"
+          >
+            <ChevronDown className="w-[18px] h-[18px]" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

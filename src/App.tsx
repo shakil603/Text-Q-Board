@@ -12,6 +12,7 @@ import { ToolbarTools } from './components/ToolbarTools';
 import { EmojiGifPanel } from './components/EmojiGifPanel';
 import { VoiceModal } from './components/VoiceModal';
 import { SettingsModal } from './components/SettingsModal';
+import { BoardStudioModal } from './components/BoardStudioModal';
 import { Keyboard } from './components/Keyboard';
 import { AndroidFrame, AndroidAppId } from './components/AndroidFrame';
 import { TextQBoardLogo, TextQBoardHeroBanner } from './components/Logo';
@@ -44,15 +45,17 @@ import {
   RotateCcw,
   CheckCircle2,
   Mic,
-  Music,
   Volume2,
-  VolumeX
+  VolumeX,
+  Music,
+  Palette,
+  Sparkles
 } from 'lucide-react';
 
 const DEFAULT_SETTINGS: KeyboardSettings = {
   hapticFeedback: true,
   soundOnKeypress: true,
-  soundVolume: 0.5,
+  soundVolume: 0.6,
   soundProfile: 'gboard_soft',
   bgMusicTrack: 'off',
   popupOnKeypress: true,
@@ -90,6 +93,39 @@ const DEFAULT_SETTINGS: KeyboardSettings = {
     { shortcut: 'amar', expanded: 'আমার' },
     { shortcut: 'bangla', expanded: 'বাংলা' },
   ],
+
+  // Board Customization, Banners, Photos & Animations
+  boardAnimation: 'none',
+  animationSpeed: 1,
+  bannerConfig: {
+    templateId: 'pro_material',
+    showTitle: true,
+    title: 'Text Q Board',
+    showSubtitle: true,
+    subtitle: 'Multilingual & Phonetic Bengali Keyboard',
+    showBadge: true,
+    badgeText: 'Pro Edition',
+    accentColor: '#A8C7FA',
+    bgGradient: 'from-[#1b1e28] via-[#1f2433] to-[#171b24]',
+  },
+  mediaBackground: {
+    type: 'none',
+    url: '',
+    dimmerOpacity: 0.45,
+    blur: 0,
+    brightness: 1,
+  },
+  customColors: {
+    useCustomColors: false,
+    boardBgColor: '#1b1b1f',
+    keyBgColor: '#2f3036',
+    keySpecialBgColor: '#232429',
+    keyTextColor: '#e3e2e6',
+    accentColor: '#a8c7fa',
+    accentTextColor: '#062e6f',
+  },
+  boardTemplateId: 'template_default',
+  isBlankBoard: false,
 };
 
 export default function App() {
@@ -125,11 +161,6 @@ export default function App() {
     };
   }, []);
 
-  // Synchronize Background Music Engine
-  useEffect(() => {
-    soundEngine.setBackgroundMusic(settings.bgMusicTrack, settings.soundVolume);
-  }, [settings.bgMusicTrack, settings.soundVolume]);
-
   // Current Active Theme
   const currentTheme: ThemeConfig =
     KEYBOARD_THEMES[settings.theme] || KEYBOARD_THEMES.cyber_cyan;
@@ -146,9 +177,10 @@ export default function App() {
   // Active Toolbar View
   const [activeToolbarView, setActiveToolbarView] = useState<ToolbarView>('normal');
 
-  // Modals / Voice Panel
+  // Modals / Voice Panel / Board Studio Customizer
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isBoardStudioOpen, setIsBoardStudioOpen] = useState(false);
 
   // Viewport mode: 'gboard_app' (Native Gboard Launcher & Test View), 'phone' (Simulator), or 'expanded' (Desktop Studio)
   const [viewMode, setViewMode] = useState<'gboard_app' | 'phone' | 'expanded'>('gboard_app');
@@ -162,22 +194,29 @@ export default function App() {
     } else if (activeToolbarView === 'emoji_picker') {
       targetDp = 330;
     } else if (
+      activeToolbarView === 'sound_studio' ||
+      activeToolbarView === 'board_studio' ||
       activeToolbarView === 'translate' ||
       activeToolbarView === 'clipboard' ||
       activeToolbarView === 'text_edit' ||
       activeToolbarView === 'themes' ||
       activeToolbarView === 'smart_ai'
     ) {
-      targetDp = settings.showNumberRow ? 380 : 345;
+      targetDp = settings.showNumberRow ? 400 : 365;
     }
     imeSetKeyboardHeight(targetDp);
   }, [inImeMode, settings.showNumberRow, activeToolbarView, isVoiceModalOpen]);
+
+  // Synchronize Background Music Engine
+  useEffect(() => {
+    soundEngine.setBackgroundMusic(settings.bgMusicTrack, settings.soundVolume);
+  }, [settings.bgMusicTrack, settings.soundVolume]);
 
   // Clipboard items
   const [clipboardItems, setClipboardItems] = useState<ClipboardItem[]>([
     {
       id: '1',
-      text: 'Text Q Board — Gboard Input Method',
+      text: 'Text Q Board — Multilingual & Phonetic Keyboard',
       timestamp: Date.now() - 10000,
       pinned: true,
     },
@@ -471,6 +510,8 @@ export default function App() {
         onHideKeyboard={inImeMode ? () => imeHideKeyboard() : undefined}
         theme={currentTheme}
         incognito={settings.incognito}
+        soundOnKeypress={settings.soundOnKeypress}
+        bgMusicActive={Boolean(settings.bgMusicTrack && settings.bgMusicTrack !== 'off')}
         onToggleFloating={() =>
           handleUpdateSettings({ isFloating: !settings.isFloating })
         }
@@ -485,7 +526,7 @@ export default function App() {
         }}
       />
 
-      {/* 2. Expanded Tools Bar (Translate, Clipboard, Text Edit D-Pad, Themes, Sound & Music, Smart AI) */}
+      {/* 2. Expanded Tools Bar (Sound & Music Studio, Board Studio, Translate, Clipboard, Text Edit D-Pad, Themes, Smart AI) */}
       {!isVoiceModalOpen && (
         <ToolbarTools
           activeView={activeToolbarView}
@@ -507,8 +548,10 @@ export default function App() {
           onSelectTheme={(themeId) => handleUpdateSettings({ theme: themeId })}
           soundOnKeypress={settings.soundOnKeypress}
           soundVolume={settings.soundVolume}
-          soundProfile={settings.soundProfile}
-          bgMusicTrack={settings.bgMusicTrack}
+          soundProfile={settings.soundProfile || 'gboard_soft'}
+          bgMusicTrack={settings.bgMusicTrack || 'off'}
+          settings={settings}
+          onOpenBoardStudio={() => setIsBoardStudioOpen(true)}
           onUpdateSettings={handleUpdateSettings}
         />
       )}
@@ -579,14 +622,11 @@ export default function App() {
   // ============================================================================
   return (
     <div className="min-h-screen bg-[#111318] text-[#e3e2e6] flex flex-col font-sans">
-      {/* Top Bar: 3 Clean Zones */}
-      <header className="h-14 w-full flex items-center justify-between px-4 md:px-6 border-b border-white/10 bg-[#1b1b1f] sticky top-0 z-40">
-        {/* Zone 1: Brand Wordmark */}
-        <a
-          href="#top"
-          className="text-base font-semibold tracking-tight text-[#e3e2e6]"
-        >
-          Text Q Board
+      {/* Top Bar: Unified App Icon + Wordmark */}
+      <header className="h-14 w-full flex items-center justify-between px-3.5 md:px-6 border-b border-white/10 bg-[#151922] sticky top-0 z-40">
+        {/* Zone 1: Brand Icon + Wordmark (Matches Android Launcher Icon & Initial Banner) */}
+        <a href="#top" className="flex items-center">
+          <TextQBoardLogo size="xs" subtitle="" />
         </a>
 
         {/* Zone 2: Clean Text Navigation Links */}
@@ -601,6 +641,14 @@ export default function App() {
             }`}
           >
             Keyboard Setup
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsBoardStudioOpen(true)}
+            className="hover:text-white text-[#a8c7fa] transition-colors whitespace-nowrap flex items-center gap-1 font-semibold"
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span>Customize Board</span>
           </button>
           <button
             type="button"
@@ -633,21 +681,60 @@ export default function App() {
           </button>
         </nav>
 
-        {/* Zone 3: Primary Action */}
-        <div className="flex items-center gap-2">
+        {/* Zone 3: Primary Actions (Board Studio + Quick Sound Toggle + Get APK + Settings) */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setIsBoardStudioOpen(true)}
+            className="px-2.5 py-1.5 rounded-lg bg-[#232936] hover:bg-[#2c3444] text-[#a8c7fa] font-semibold text-xs flex items-center gap-1.5 transition-colors border border-white/5"
+            title="Customize Board, Banners, Photos & Animations"
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Customize</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const next = !settings.soundOnKeypress;
+              handleUpdateSettings({ soundOnKeypress: next });
+              if (next) {
+                soundEngine.playKeyClick(
+                  'standard',
+                  settings.soundVolume,
+                  settings.soundProfile || 'gboard_soft'
+                );
+              }
+              showToast(next ? 'Typing Sound: ON' : 'Typing Sound: OFF');
+            }}
+            className={`p-2 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors ${
+              settings.soundOnKeypress
+                ? 'bg-[#252d3d] text-[#a8c7fa] border border-[#a8c7fa]/30'
+                : 'bg-[#232429] text-[#9aa0a6]'
+            }`}
+            title={settings.soundOnKeypress ? 'Mute Typing Sound' : 'Enable Typing Sound'}
+          >
+            {settings.soundOnKeypress ? (
+              <Volume2 className="w-3.5 h-3.5" />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5" />
+            )}
+          </button>
+
           <a
             href="https://github.com/shakil603/Text-Q-Board/actions"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-lg bg-[#2f3036] text-[#e3e2e6] hover:bg-[#373940] font-medium text-xs flex items-center gap-1.5 transition-colors whitespace-nowrap"
+            className="px-2.5 py-1.5 rounded-lg bg-[#232429] text-[#e3e2e6] hover:bg-[#2f3036] font-medium text-xs flex items-center gap-1.5 transition-colors whitespace-nowrap"
           >
             <Download className="w-3.5 h-3.5 text-[#a8c7fa]" />
             <span>Get APK</span>
           </a>
+
           <button
             type="button"
             onClick={() => setIsSettingsModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-lg bg-[#a8c7fa] text-[#062e6f] font-semibold text-xs flex items-center gap-1.5 hover:bg-[#b8d2fc] transition-colors whitespace-nowrap"
+            className="px-3 py-1.5 rounded-lg bg-[#a8c7fa] text-[#062e6f] font-semibold text-xs flex items-center gap-1.5 hover:bg-[#b8d2fc] transition-colors whitespace-nowrap"
           >
             <Settings className="w-3.5 h-3.5" />
             <span>Settings</span>
@@ -667,17 +754,26 @@ export default function App() {
       {viewMode === 'gboard_app' ? (
         <div className="flex-1 flex flex-col justify-between max-w-xl w-full mx-auto">
           {/* Top Setup & Live Typing Section */}
-          <div className="p-3.5 sm:p-4 space-y-3 overflow-y-auto">
-            {/* Unified High-Contrast Hero Banner */}
+          <div className="p-3 sm:p-4 space-y-2.5 overflow-y-auto">
+            {/* Unified Customizable Hero Banner (With Name, Gradients, Photos, and Edit button) */}
             <TextQBoardHeroBanner
+              bannerConfig={settings.bannerConfig}
+              mediaBackground={settings.mediaBackground}
+              isBlankBoard={settings.isBlankBoard}
               onOpenVoice={() => setIsVoiceModalOpen(true)}
-              onOpenSoundStudio={() => setActiveToolbarView('sound_studio')}
+              onOpenSoundStudio={() => {
+                setIsVoiceModalOpen(false);
+                setActiveToolbarView((prev) =>
+                  prev === 'sound_studio' ? 'normal' : 'sound_studio'
+                );
+              }}
+              onOpenBoardStudio={() => setIsBoardStudioOpen(true)}
             />
 
             {/* Clean Material 3 Setup & Audio Control Card */}
-            <div className="p-4 rounded-2xl bg-[#1b1b1f] border border-white/8 space-y-3.5">
+            <div className="p-3.5 rounded-2xl bg-[#151922] border border-[#a8c7fa]/25 space-y-3">
               {/* 2-Step Android System Keyboard Activation */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -688,10 +784,10 @@ export default function App() {
                       );
                     }
                   }}
-                  className={`p-3 rounded-xl border text-left flex items-center justify-between transition-colors ${
+                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors ${
                     imeStatus.enabled
-                      ? 'bg-[#1e2a24] border-[#6dd58c]/30 text-[#e1e9e4]'
-                      : 'bg-[#232429] border-white/8 text-[#e3e2e6] hover:bg-[#2f3036]'
+                      ? 'bg-[#1b2822] border-[#6dd58c]/35 text-[#e1e9e4]'
+                      : 'bg-[#1e2430] border-white/10 text-[#e3e2e6] hover:bg-[#262d3d]'
                   }`}
                 >
                   <div>
@@ -721,10 +817,10 @@ export default function App() {
                       );
                     }
                   }}
-                  className={`p-3 rounded-xl border text-left flex items-center justify-between transition-colors ${
+                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-colors ${
                     imeStatus.selected
-                      ? 'bg-[#1e2a24] border-[#6dd58c]/30 text-[#e1e9e4]'
-                      : 'bg-[#232429] border-white/8 text-[#e3e2e6] hover:bg-[#2f3036]'
+                      ? 'bg-[#1b2822] border-[#6dd58c]/35 text-[#e1e9e4]'
+                      : 'bg-[#1e2430] border-white/10 text-[#e3e2e6] hover:bg-[#262d3d]'
                   }`}
                 >
                   <div>
@@ -745,74 +841,109 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Quick Sound & Music Studio Bar */}
-              <div className="p-2.5 rounded-xl bg-[#232429] border border-white/5 space-y-2">
-                <div className="flex items-center justify-between">
+              {/* Quick Board Customization & Typing Sound Strip */}
+              <div className="pt-1 border-t border-white/8 space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() =>
-                        handleUpdateSettings({
-                          soundOnKeypress: !settings.soundOnKeypress,
-                        })
-                      }
-                      className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                        settings.soundOnKeypress
-                          ? 'bg-[#a8c7fa] text-[#062e6f]'
-                          : 'bg-[#2f3036] text-[#9aa0a6]'
-                      }`}
+                      onClick={() => setIsBoardStudioOpen(true)}
+                      className="text-[#a8c7fa] font-semibold hover:underline flex items-center gap-1"
                     >
-                      {settings.soundOnKeypress ? (
-                        <Volume2 className="w-3.5 h-3.5" />
-                      ) : (
-                        <VolumeX className="w-3.5 h-3.5" />
-                      )}
-                      <span>
-                        {settings.soundOnKeypress ? 'Sound: ON' : 'Sound: OFF'}
-                      </span>
+                      <Palette className="w-3 h-3" />
+                      <span>Customize Colors, Banner & Photos</span>
                     </button>
-
-                    <span className="text-[11px] text-[#9aa0a6] hidden sm:inline">
-                      Try typing sounds & melodies:
-                    </span>
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => setActiveToolbarView('sound_studio')}
-                    className="text-[11px] text-[#a8c7fa] hover:underline font-medium"
+                    onClick={() => {
+                      const next = !settings.soundOnKeypress;
+                      handleUpdateSettings({ soundOnKeypress: next });
+                      if (next) {
+                        soundEngine.playKeyClick(
+                          'standard',
+                          settings.soundVolume,
+                          settings.soundProfile || 'gboard_soft'
+                        );
+                      }
+                    }}
+                    className={`font-semibold flex items-center gap-1 ${
+                      settings.soundOnKeypress ? 'text-[#6dd58c]' : 'text-[#9aa0a6]'
+                    }`}
                   >
-                    All Sounds →
+                    {settings.soundOnKeypress ? (
+                      <>
+                        <Volume2 className="w-3 h-3" />
+                        <span>Sound ON</span>
+                      </>
+                    ) : (
+                      <>
+                        <VolumeX className="w-3 h-3" />
+                        <span>Sound OFF</span>
+                      </>
+                    )}
                   </button>
                 </div>
 
-                {/* Quick Sound Profiles Chips */}
                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                  {SOUND_PROFILES.slice(0, 6).map((p) => {
-                    const isSelected =
-                      settings.soundProfile === p.id && settings.soundOnKeypress;
+                  {SOUND_PROFILES.map((sp) => {
+                    const isActive =
+                      settings.soundOnKeypress &&
+                      (settings.soundProfile || 'gboard_soft') === sp.id;
                     return (
                       <button
-                        key={p.id}
+                        key={sp.id}
                         type="button"
                         onClick={() => {
                           handleUpdateSettings({
-                            soundProfile: p.id,
                             soundOnKeypress: true,
+                            soundProfile: sp.id,
                           });
                           soundEngine.playKeyClick(
                             'standard',
                             settings.soundVolume,
-                            p.id
+                            sp.id
                           );
                         }}
-                        className={`px-2 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-colors ${
-                          isSelected
-                            ? 'bg-[#a8c7fa] text-[#062e6f] font-semibold shadow-sm'
-                            : 'bg-[#2f3036] text-[#c4c6d0] hover:bg-[#373940]'
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap transition-colors ${
+                          isActive
+                            ? 'bg-[#a8c7fa] text-[#062e6f] font-semibold'
+                            : 'bg-[#1e2430] text-[#c4c6d0] hover:bg-[#262d3d]'
                         }`}
                       >
-                        {p.name}
+                        {sp.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Ambient Background Music Quick Selector */}
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
+                  <span className="text-[11px] text-[#9aa0a6] shrink-0 flex items-center gap-1 pr-1">
+                    <Music className="w-3 h-3 text-[#a8c7fa]" />
+                    <span>Music:</span>
+                  </span>
+                  {BG_MUSIC_TRACKS.map((track) => {
+                    const isPlaying = (settings.bgMusicTrack || 'off') === track.id;
+                    return (
+                      <button
+                        key={track.id}
+                        type="button"
+                        onClick={() => {
+                          handleUpdateSettings({ bgMusicTrack: track.id });
+                          soundEngine.setBackgroundMusic(
+                            track.id,
+                            settings.soundVolume
+                          );
+                        }}
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap transition-colors ${
+                          isPlaying
+                            ? 'bg-[#4285f4] text-white font-semibold'
+                            : 'bg-[#1e2430] text-[#9aa0a6] hover:text-white'
+                        }`}
+                      >
+                        {track.name}
                       </button>
                     );
                   })}
@@ -820,7 +951,7 @@ export default function App() {
               </div>
 
               {/* Clean Segmented Language Bar */}
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-white/8">
                 {SUPPORTED_LANGUAGES.slice(0, 6).map((lang) => (
                   <button
                     key={lang.id}
@@ -831,7 +962,7 @@ export default function App() {
                     className={`px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                       settings.activeLanguage === lang.id
                         ? 'bg-[#a8c7fa] text-[#062e6f] font-semibold'
-                        : 'bg-[#232429] text-[#c4c6d0] hover:bg-[#2f3036]'
+                        : 'bg-[#1e2430] text-[#c4c6d0] hover:bg-[#262d3d]'
                     }`}
                   >
                     {lang.nativeName}
@@ -841,16 +972,24 @@ export default function App() {
             </div>
 
             {/* Live Typing Test Area */}
-            <div className="p-3.5 rounded-2xl bg-[#1b1b1f] border border-white/8 space-y-2">
+            <div className="p-3 rounded-2xl bg-[#151922] border border-white/8 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-[#c4c6d0]">
-                  Test Keyboard & Voice Input
+                  Test Keyboard, Customized Board & Voice
                 </span>
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
+                    onClick={() => setIsBoardStudioOpen(true)}
+                    className="px-2.5 py-1 rounded-md bg-[#232936] hover:bg-[#2c3444] text-xs text-[#a8c7fa] flex items-center gap-1"
+                  >
+                    <Palette className="w-3 h-3" />
+                    <span>Board Studio</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={handleCopySelection}
-                    className="px-2.5 py-1 rounded-md bg-[#2f3036] hover:bg-[#373940] text-xs text-[#e3e2e6] flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-md bg-[#232936] hover:bg-[#2c3444] text-xs text-[#e3e2e6] flex items-center gap-1"
                   >
                     <Copy className="w-3 h-3" />
                     <span>Copy</span>
@@ -861,7 +1000,7 @@ export default function App() {
                       setInputText('');
                       setCursorPos(0);
                     }}
-                    className="px-2.5 py-1 rounded-md bg-[#2f3036] hover:bg-[#373940] text-xs text-[#c4c6d0] flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-md bg-[#232936] hover:bg-[#2c3444] text-xs text-[#c4c6d0] flex items-center gap-1"
                   >
                     <RotateCcw className="w-3 h-3" />
                     <span>Clear</span>
@@ -886,8 +1025,8 @@ export default function App() {
                     (e.target as HTMLTextAreaElement).selectionStart || 0
                   )
                 }
-                placeholder="Type here using the Gboard layout below (or tap the microphone icon to dictate)..."
-                className="w-full h-24 p-3 rounded-xl bg-[#111318] border border-white/10 text-[#e3e2e6] placeholder-[#9aa0a6] text-sm leading-relaxed resize-none outline-none focus:border-[#a8c7fa]"
+                placeholder="Type here using the customized keyboard below..."
+                className="w-full h-20 p-2.5 rounded-xl bg-[#0e1117] border border-white/10 text-[#e3e2e6] placeholder-[#9aa0a6] text-sm leading-relaxed resize-none outline-none focus:border-[#a8c7fa]"
               />
             </div>
           </div>
@@ -916,16 +1055,24 @@ export default function App() {
       ) : (
         <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
           <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column: Text Editor */}
+            {/* Left Column: Text Editor & Board Customizer Card */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="p-5 rounded-2xl bg-[#1b1b1f] border border-white/8 space-y-3">
+              <div className="p-5 rounded-2xl bg-[#151922] border border-[#a8c7fa]/20 space-y-3">
                 <div className="flex items-center justify-between">
                   <TextQBoardLogo size="sm" />
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
+                      onClick={() => setIsBoardStudioOpen(true)}
+                      className="px-2.5 py-1 rounded-lg bg-[#232936] hover:bg-[#2c3444] text-[#a8c7fa] text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Palette className="w-3.5 h-3.5" />
+                      <span>Customize</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleCopySelection}
-                      className="p-1.5 rounded-lg bg-[#2f3036] hover:bg-[#373940] text-[#e3e2e6]"
+                      className="p-1.5 rounded-lg bg-[#232936] hover:bg-[#2c3444] text-[#e3e2e6]"
                       title="Copy"
                     >
                       <Copy className="w-3.5 h-3.5" />
@@ -936,7 +1083,7 @@ export default function App() {
                         setInputText('');
                         setCursorPos(0);
                       }}
-                      className="p-1.5 rounded-lg bg-[#2f3036] hover:bg-[#373940] text-[#e3e2e6]"
+                      className="p-1.5 rounded-lg bg-[#232936] hover:bg-[#2c3444] text-[#e3e2e6]"
                       title="Clear"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
@@ -951,7 +1098,7 @@ export default function App() {
                     setCursorPos(e.target.selectionStart || 0);
                   }}
                   placeholder="Type or dictate with Text Q Board..."
-                  className="w-full h-44 p-3.5 rounded-xl bg-[#111318] border border-white/10 text-[#e3e2e6] placeholder-[#9aa0a6] text-sm leading-relaxed resize-none outline-none focus:border-[#a8c7fa]"
+                  className="w-full h-44 p-3.5 rounded-xl bg-[#0e1117] border border-white/10 text-[#e3e2e6] placeholder-[#9aa0a6] text-sm leading-relaxed resize-none outline-none focus:border-[#a8c7fa]"
                 />
 
                 <div className="flex items-center justify-between text-xs text-[#9aa0a6] tabular-nums">
@@ -984,6 +1131,16 @@ export default function App() {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+        settings={settings}
+        onUpdateSettings={handleUpdateSettings}
+        theme={currentTheme}
+        onOpenBoardStudio={() => setIsBoardStudioOpen(true)}
+      />
+
+      {/* Board Studio Modal: Colors, Editable Banners, Photos, Animations, and Templates */}
+      <BoardStudioModal
+        isOpen={isBoardStudioOpen}
+        onClose={() => setIsBoardStudioOpen(false)}
         settings={settings}
         onUpdateSettings={handleUpdateSettings}
         theme={currentTheme}

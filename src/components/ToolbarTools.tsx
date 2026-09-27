@@ -55,6 +55,8 @@ interface ToolbarToolsProps {
   soundVolume?: number;
   soundProfile?: SoundProfileId;
   bgMusicTrack?: BgMusicTrackId;
+  settings?: KeyboardSettings;
+  onOpenBoardStudio?: () => void;
   onUpdateSettings?: (newSettings: Partial<KeyboardSettings>) => void;
 }
 
@@ -91,6 +93,8 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
   soundVolume = 0.5,
   soundProfile = 'gboard_soft',
   bgMusicTrack = 'off',
+  settings,
+  onOpenBoardStudio,
   onUpdateSettings,
 }) => {
   // Translate states
@@ -612,33 +616,67 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </div>
       )}
 
-      {/* 4. THEMES SELECTOR */}
-      {activeView === 'themes' && (
-        <div className="grid grid-cols-3 gap-2 max-h-36 overflow-y-auto p-1">
-          {Object.values(KEYBOARD_THEMES).map((t) => (
+      {/* 4. THEMES & BOARD STUDIO SELECTOR */}
+      {(activeView === 'themes' || activeView === 'board_studio') && (
+        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+          {/* Direct Button to Open Full Board Studio */}
+          {onOpenBoardStudio && (
             <button
-              key={t.id}
+              type="button"
               onClick={() => {
-                onSelectTheme(t.id);
                 onClose();
+                onOpenBoardStudio();
               }}
-              className={`p-2 rounded-xl border text-left flex flex-col gap-1 transition-all active:scale-95 ${
-                theme.id === t.id
-                  ? 'border-[#a8c7fa] ring-2 ring-[#a8c7fa]/40 shadow-lg'
-                  : 'border-white/10 hover:border-white/30'
-              } ${t.boardBg}`}
+              className="w-full p-2.5 rounded-xl bg-gradient-to-r from-[#1e2a3a] via-[#243347] to-[#1e2a3a] border border-[#a8c7fa]/40 flex items-center justify-between hover:border-[#a8c7fa] transition-colors"
             >
-              <div className="flex items-center justify-between">
-                <span className={`text-[11px] font-bold ${t.textPrimary}`}>{t.name}</span>
-                {theme.id === t.id && <Check className="w-3.5 h-3.5 text-[#a8c7fa]" />}
+              <div className="flex items-center gap-2">
+                <span className="text-base">🎨</span>
+                <div className="text-left">
+                  <p className="font-bold text-xs text-white">
+                    Open Board Studio & Customizer
+                  </p>
+                  <p className="text-[10px] text-[#a8c7fa]">
+                    Edit Banners & Names · Upload Photos · Matrix/Bokeh FX · Custom Colors
+                  </p>
+                </div>
               </div>
-              <div className="flex gap-1">
-                <div className={`w-3.5 h-3.5 rounded ${t.keyBg} ${t.keyBorder}`} />
-                <div className={`w-3.5 h-3.5 rounded ${t.accent}`} />
-                <div className={`w-3.5 h-3.5 rounded ${t.keySpecialBg}`} />
-              </div>
+              <span className="text-xs font-semibold text-[#a8c7fa] px-2 py-0.5 rounded bg-white/5">
+                Customize →
+              </span>
             </button>
-          ))}
+          )}
+
+          <div className="grid grid-cols-3 gap-2 p-1">
+            {Object.values(KEYBOARD_THEMES).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => {
+                  onSelectTheme(t.id);
+                  if (onUpdateSettings) {
+                    onUpdateSettings({ isBlankBoard: false });
+                  }
+                  onClose();
+                }}
+                className={`p-2 rounded-xl border text-left flex flex-col gap-1 transition-all active:scale-95 ${
+                  theme.id === t.id && !settings?.isBlankBoard
+                    ? 'border-[#a8c7fa] ring-2 ring-[#a8c7fa]/40 shadow-lg'
+                    : 'border-white/10 hover:border-white/30'
+                } ${t.boardBg}`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[11px] font-bold ${t.textPrimary}`}>{t.name}</span>
+                  {theme.id === t.id && !settings?.isBlankBoard && (
+                    <Check className="w-3.5 h-3.5 text-[#a8c7fa]" />
+                  )}
+                </div>
+                <div className="flex gap-1">
+                  <div className={`w-3.5 h-3.5 rounded ${t.keyBg} ${t.keyBorder}`} />
+                  <div className={`w-3.5 h-3.5 rounded ${t.accent}`} />
+                  <div className={`w-3.5 h-3.5 rounded ${t.keySpecialBg}`} />
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

@@ -61,7 +61,8 @@ export type ThemeId =
   | 'light_slate'
   | 'emerald_neon'
   | 'sunset_violet'
-  | 'crimson_dark';
+  | 'crimson_dark'
+  | 'custom';
 
 export type SoundProfileId =
   | 'gboard_soft'
@@ -102,6 +103,80 @@ export interface ThemeConfig {
   isDark: boolean;
 }
 
+export type BoardAnimationType =
+  | 'none'
+  | 'bokeh_orbs'
+  | 'matrix_rain'
+  | 'starry_night'
+  | 'neon_waves'
+  | 'aurora_shift'
+  | 'falling_petals'
+  | 'cyber_grid';
+
+export type BoardBannerTemplateId =
+  | 'pro_material'
+  | 'bengal_heritage'
+  | 'cyberpunk_glow'
+  | 'minimal_obsidian'
+  | 'sakura_blossom'
+  | 'sunset_horizon'
+  | 'ocean_breeze'
+  | 'aurora_borealis'
+  | 'blank_minimal';
+
+export interface BoardBannerConfig {
+  templateId: BoardBannerTemplateId;
+  showTitle: boolean;
+  title: string;
+  showSubtitle: boolean;
+  subtitle: string;
+  showBadge: boolean;
+  badgeText: string;
+  accentColor: string;
+  bgGradient: string;
+}
+
+export interface BoardMediaBackground {
+  type: 'none' | 'image' | 'gif' | 'video';
+  url: string;
+  name?: string;
+  dimmerOpacity: number; // 0 to 0.95, default 0.45
+  blur: number; // 0 to 12px
+  brightness: number; // 0.5 to 1.5
+}
+
+export interface BoardCustomColorConfig {
+  useCustomColors: boolean;
+  boardBgColor: string;
+  keyBgColor: string;
+  keyTextColor: string;
+  keySpecialBgColor: string;
+  accentColor: string;
+  accentTextColor: string;
+  boardGradient?: string;
+}
+
+export interface BoardTemplateDef {
+  id: string;
+  name: string;
+  category: 'nature' | 'minimal' | 'bengali' | 'cyber' | 'abstract';
+  description: string;
+  previewColor: string;
+  boardBg: string;
+  boardGradient?: string;
+  keyBg: string;
+  keySpecialBg: string;
+  keyTextColor: string;
+  accentColor: string;
+  accentTextColor: string;
+  animation: BoardAnimationType;
+  bannerTemplate: BoardBannerTemplateId;
+  defaultBannerTitle: string;
+  defaultBannerSubtitle: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'gif' | 'video';
+}
+
 export interface KeyboardSettings {
   hapticFeedback: boolean;
   soundOnKeypress: boolean;
@@ -130,6 +205,15 @@ export interface KeyboardSettings {
   enabledLanguages: LanguageId[];
   incognito: boolean;
   customShortcuts: { shortcut: string; expanded: string }[];
+
+  // Board Customization & Animation Suite
+  boardAnimation: BoardAnimationType;
+  animationSpeed: number; // 0.5 to 2.0
+  bannerConfig: BoardBannerConfig;
+  mediaBackground: BoardMediaBackground;
+  customColors: BoardCustomColorConfig;
+  boardTemplateId: string;
+  isBlankBoard: boolean;
 }
 
 export interface ClipboardItem {
@@ -158,6 +242,7 @@ export type ToolbarView =
   | 'normal'
   | 'more_tools'
   | 'sound_studio'
+  | 'board_studio'
   | 'translate'
   | 'clipboard'
   | 'text_edit'

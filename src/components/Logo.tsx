@@ -1,4 +1,5 @@
 import React from 'react';
+import { BoardBannerConfig, BoardMediaBackground } from '../types/keyboard';
 
 interface LogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'hero';
@@ -124,48 +125,156 @@ export const TextQBoardLogo: React.FC<LogoProps> = ({
 };
 
 /**
- * Cohesive Hero Banner Card matching the Launcher Icon and App Logo
+ * Cohesive Hero Banner Card with Customizable Banner Names, Gradients, and Photos
  */
 export const TextQBoardHeroBanner: React.FC<{
+  bannerConfig?: BoardBannerConfig;
+  mediaBackground?: BoardMediaBackground;
+  isBlankBoard?: boolean;
   onOpenVoice?: () => void;
   onOpenSoundStudio?: () => void;
-}> = ({ onOpenVoice, onOpenSoundStudio }) => {
+  onOpenBoardStudio?: () => void;
+}> = ({
+  bannerConfig,
+  mediaBackground,
+  isBlankBoard = false,
+  onOpenVoice,
+  onOpenSoundStudio,
+  onOpenBoardStudio,
+}) => {
+  const isCustomMedia =
+    !isBlankBoard &&
+    mediaBackground &&
+    mediaBackground.type !== 'none' &&
+    Boolean(mediaBackground.url);
+
+  const bgGradient =
+    bannerConfig?.bgGradient || 'from-[#1b1e28] via-[#1f2433] to-[#171b24]';
+
+  const showTitle = !isBlankBoard && (bannerConfig?.showTitle ?? true);
+  const showSubtitle = !isBlankBoard && (bannerConfig?.showSubtitle ?? true);
+  const showBadge = !isBlankBoard && (bannerConfig?.showBadge ?? true);
+
+  const titleText = bannerConfig?.title || 'Text Q Board';
+  const subtitleText =
+    bannerConfig?.subtitle ||
+    'Material 3 Multilingual, Phonetic Bengali & Sound Studio Keyboard';
+  const badgeText = bannerConfig?.badgeText || 'Pro Engine';
+  const accentColor = bannerConfig?.accentColor || '#A8C7FA';
+
   return (
-    <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1b1e28] via-[#1f2433] to-[#171b24] border border-[#a8c7fa]/20 shadow-lg space-y-3">
-      <div className="flex items-center justify-between gap-3">
+    <div
+      className={`relative p-4 rounded-2xl overflow-hidden border border-[#a8c7fa]/20 shadow-lg select-none ${
+        isBlankBoard
+          ? 'bg-black'
+          : `bg-gradient-to-r ${bgGradient}`
+      }`}
+    >
+      {/* Optional Custom Photo/Video Wallpaper in Hero Banner */}
+      {isCustomMedia && (
+        <div className="absolute inset-0 pointer-events-none">
+          {mediaBackground?.type === 'video' ? (
+            <video
+              src={mediaBackground.url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+              style={{
+                filter: `brightness(${mediaBackground.brightness ?? 1}) blur(${
+                  mediaBackground.blur ?? 0
+                }px)`,
+              }}
+            />
+          ) : (
+            <img
+              src={mediaBackground?.url}
+              alt="Banner Wallpaper"
+              className="w-full h-full object-cover"
+              style={{
+                filter: `brightness(${mediaBackground?.brightness ?? 1}) blur(${
+                  mediaBackground?.blur ?? 0
+                }px)`,
+              }}
+            />
+          )}
+          <div
+            className="absolute inset-0 bg-black"
+            style={{ opacity: mediaBackground?.dimmerOpacity ?? 0.45 }}
+          />
+        </div>
+      )}
+
+      {/* Main Banner Content */}
+      <div className="relative z-10 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <TextQBoardIconSvg size={46} />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-white tracking-tight">
-                Text Q Board
-              </h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#a8c7fa]/20 text-[#a8c7fa] border border-[#a8c7fa]/30">
-                Gboard Engine
-              </span>
+              {showTitle ? (
+                <h1
+                  className="text-base font-bold tracking-tight text-white"
+                  style={{ color: accentColor }}
+                >
+                  {titleText}
+                </h1>
+              ) : isBlankBoard ? (
+                <span className="text-xs text-[#9aa0a6] italic">
+                  [Blank Minimalist Board]
+                </span>
+              ) : (
+                <span className="text-xs text-[#9aa0a6] italic">
+                  [Banner Name Hidden]
+                </span>
+              )}
+
+              {showBadge && badgeText && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#a8c7fa]/20 text-[#a8c7fa] border border-[#a8c7fa]/30">
+                  {badgeText}
+                </span>
+              )}
             </div>
-            <p className="text-[11px] text-[#9aa0a6] mt-0.5">
-              Material 3 Multilingual, Phonetic Bengali & Sound Studio Keyboard
-            </p>
+
+            {showSubtitle && subtitleText && (
+              <p className="text-[11px] text-[#c4c6d0] mt-0.5 max-w-md line-clamp-1">
+                {subtitleText}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Quick Actions */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onOpenBoardStudio && (
+            <button
+              type="button"
+              onClick={onOpenBoardStudio}
+              className="px-3 py-1.5 rounded-full bg-[#232936] hover:bg-[#2c3444] text-xs font-semibold text-[#a8c7fa] flex items-center gap-1.5 transition-colors border border-white/10"
+              title="Customize Board & Banners"
+            >
+              <span>🎨</span>
+              <span className="hidden sm:inline">Customize Board</span>
+            </button>
+          )}
+
           {onOpenSoundStudio && (
             <button
               type="button"
               onClick={onOpenSoundStudio}
-              className="px-3 py-1.5 rounded-full bg-[#2a3040] hover:bg-[#353d52] text-xs font-medium text-[#a8c7fa] flex items-center gap-1.5 transition-colors border border-white/5"
+              className="px-2.5 py-1.5 rounded-full bg-[#232936] hover:bg-[#2c3444] text-xs font-medium text-[#c4c6d0] hover:text-white flex items-center gap-1 transition-colors"
+              title="Typing Sound & Music"
             >
               <span>🎵</span>
-              <span className="hidden sm:inline">Sound & Music</span>
             </button>
           )}
+
           {onOpenVoice && (
             <button
               type="button"
               onClick={onOpenVoice}
               className="px-3 py-1.5 rounded-full bg-[#a8c7fa] hover:bg-[#b8d2fc] text-xs font-semibold text-[#062e6f] flex items-center gap-1.5 transition-colors shadow-sm"
+              title="Voice Typing"
             >
               <span>🎤</span>
               <span className="hidden sm:inline">Voice</span>
