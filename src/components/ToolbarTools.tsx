@@ -6,20 +6,19 @@ import {
   ArrowDown,
   Copy,
   Scissors,
-  ClipboardPaste,
   Trash2,
   Pin,
   Sparkles,
   Plus,
-  RotateCcw,
   Check,
-  Languages,
-  CheckCheck,
+  Languages as LanguagesIcon,
   Volume2,
   VolumeX,
   Music,
   Disc,
-  Play
+  Play,
+  Search,
+  Globe
 } from 'lucide-react';
 import {
   ThemeConfig,
@@ -28,9 +27,11 @@ import {
   ClipboardItem,
   SoundProfileId,
   BgMusicTrackId,
-  KeyboardSettings
+  KeyboardSettings,
+  LanguageId
 } from '../types/keyboard';
 import { KEYBOARD_THEMES } from '../data/themes';
+import { SUPPORTED_LANGUAGES } from '../data/layouts';
 import { SOUND_PROFILES, BG_MUSIC_TRACKS, soundEngine } from '../utils/audio';
 
 interface ToolbarToolsProps {
@@ -55,6 +56,8 @@ interface ToolbarToolsProps {
   soundVolume?: number;
   soundProfile?: SoundProfileId;
   bgMusicTrack?: BgMusicTrackId;
+  activeLanguage?: LanguageId;
+  onLanguageChange?: (langId: LanguageId) => void;
   settings?: KeyboardSettings;
   onOpenBoardStudio?: () => void;
   onUpdateSettings?: (newSettings: Partial<KeyboardSettings>) => void;
@@ -63,12 +66,19 @@ interface ToolbarToolsProps {
 const TRANSLATION_LANGUAGES = [
   { code: 'bn', name: 'Bengali / বাংলা' },
   { code: 'en', name: 'English' },
-  { code: 'es', name: 'Spanish' },
-  { code: 'ar', name: 'Arabic' },
-  { code: 'hi', name: 'Hindi' },
-  { code: 'fr', name: 'French' },
-  { code: 'de', name: 'German' },
-  { code: 'ja', name: 'Japanese' },
+  { code: 'es', name: 'Spanish / Español' },
+  { code: 'ar', name: 'Arabic / العربية' },
+  { code: 'hi', name: 'Hindi / हिन्दी' },
+  { code: 'fr', name: 'French / Français' },
+  { code: 'de', name: 'German / Deutsch' },
+  { code: 'ja', name: 'Japanese / 日本語' },
+  { code: 'zh', name: 'Chinese / 中文' },
+  { code: 'ko', name: 'Korean / 한국어' },
+  { code: 'ru', name: 'Russian / Русский' },
+  { code: 'pt', name: 'Portuguese / Português' },
+  { code: 'it', name: 'Italian / Italiano' },
+  { code: 'tr', name: 'Turkish / Türkçe' },
+  { code: 'vi', name: 'Vietnamese / Tiếng Việt' },
 ];
 
 export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
@@ -93,6 +103,8 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
   soundVolume = 0.5,
   soundProfile = 'gboard_soft',
   bgMusicTrack = 'off',
+  activeLanguage = 'en_us',
+  onLanguageChange,
   settings,
   onOpenBoardStudio,
   onUpdateSettings,
@@ -104,8 +116,9 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
   const [transOutput, setTransOutput] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
 
-  // Text Edit Select Mode
-  const [isSelectMode, setIsSelectMode] = useState(false);
+  // Language search state
+  const [langSearch, setLangSearch] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<string>('all');
 
   // New clip input
   const [newClipText, setNewClipText] = useState('');
@@ -131,70 +144,97 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
     setIsTranslating(true);
     const timer = setTimeout(() => {
       const lower = transInput.trim().toLowerCase();
-      let translated = '';
+      let output = '';
 
-      if (sourceLang === 'en' && targetLang === 'bn') {
-        const enBnMap: Record<string, string> = {
-          'hello': 'হ্যালো / নমস্কার',
+      if (targetLang === 'bn') {
+        const dict: Record<string, string> = {
+          hello: 'হ্যালো / নমস্কার',
+          hi: 'হাই / সালাম',
+          welcome: 'স্বাগতম',
+          good: 'ভালো',
+          thanks: 'ধন্যবাদ',
+          'thank you': 'আপনাকে অনেক ধন্যবাদ',
+          yes: 'হ্যাঁ',
+          no: 'না',
+          bangla: 'বাংলা',
+          bengali: 'বাংলা',
+          love: 'ভালোবাসা',
+          beautiful: 'সুন্দর',
+          keyboard: 'কীবোর্ড',
+          how: 'কেমন',
           'how are you': 'আপনি কেমন আছেন?',
           'good morning': 'শুভ সকাল',
           'good night': 'শুভ রাত্রি',
-          'thank you': 'আপনাকে অনেক ধন্যবাদ',
-          'welcome': 'স্বাগতম',
-          'i love you': 'আমি তোমাকে ভালোবাসি',
-          'what is your name': 'আপনার নাম কী?',
-          'see you tomorrow': 'কাল দেখা হবে',
-          'i am on my way': 'আমি আসছি পথে',
-          'have a great day': 'দিনটি শুভ হোক',
-          'text q board': 'টেক্সট কিউ বোর্ড',
+          name: 'নাম',
+          friend: 'বন্ধু',
         };
-        translated = enBnMap[lower] || `[বাংলা অনুবাদ] ${transInput}`;
-      } else if (sourceLang === 'bn' && targetLang === 'en') {
-        const bnEnMap: Record<string, string> = {
-          'কেমন আছেন': 'How are you?',
-          'ভালো': 'Good / Fine',
-          'ধন্যবাদ': 'Thank you',
+        output = dict[lower] || `${transInput} (অনুবাদ)`;
+      } else if (targetLang === 'en') {
+        const dict: Record<string, string> = {
+          হ্যালো: 'Hello',
+          ধন্যবাদ: 'Thank you',
+          ভালো: 'Good',
+          সুন্দর: 'Beautiful',
+          কীবোর্ড: 'Keyboard',
           'শুভ সকাল': 'Good morning',
-          'আমি তোমাকে ভালোবাসি': 'I love you',
-          'দেখা হবে': 'See you soon',
+          'কেমন আছেন': 'How are you?',
+          বন্ধু: 'Friend',
+          বাংলা: 'Bengali',
         };
-        translated = bnEnMap[lower] || `[English translation] ${transInput}`;
+        output = dict[lower] || `${transInput} (translated)`;
+      } else if (targetLang === 'es') {
+        const dict: Record<string, string> = {
+          hello: 'Hola',
+          thanks: 'Gracias',
+          good: 'Bueno',
+          keyboard: 'Teclado',
+        };
+        output = dict[lower] || `${transInput} (traducido)`;
+      } else if (targetLang === 'ar') {
+        const dict: Record<string, string> = {
+          hello: 'مرحباً',
+          thanks: 'شكراً',
+          good: 'جيد',
+          keyboard: 'لوحة المفاتيح',
+        };
+        output = dict[lower] || `${transInput} (مترجم)`;
       } else {
-        translated = `[${targetLang.toUpperCase()}] ${transInput}`;
+        output = `${transInput} (${targetLang.toUpperCase()})`;
       }
 
-      setTransOutput(translated);
+      setTransOutput(output);
       setIsTranslating(false);
-    }, 200);
+    }, 280);
 
     return () => clearTimeout(timer);
   }, [transInput, sourceLang, targetLang]);
 
-  // AI Tone Rephrase
-  const handleAiRephrase = (tone: 'polite' | 'casual' | 'bengali' | 'concise' | 'expanded') => {
-    if (!currentText.trim()) return;
+  // AI assistant mock rephrase
+  const handleAiRephrase = (tone: string) => {
+    const text = currentText.trim() || 'Hello, I am testing the new keyboard design.';
     setAiGenerating(true);
-
     setTimeout(() => {
       let options: string[] = [];
-      const text = currentText.trim();
       switch (tone) {
         case 'polite':
           options = [
-            `I would like to kindly let you know that ${text}.`,
-            `Could you please note that: ${text}? Best regards.`,
+            `I would like to kindly share that ${text.toLowerCase().replace(/\.$/, '')}.`,
+            `Please be informed: ${text}`,
+            `With utmost respect, ${text}`,
           ];
           break;
         case 'casual':
           options = [
-            `Hey! Just wanted to say ${text} 😊`,
-            `Quick note: ${text} 🙌`,
+            `Hey! ${text} 😊`,
+            `Quick note: ${text} ✨`,
+            `Check it out: ${text}`,
           ];
           break;
         case 'bengali':
           options = [
-            `আপনাকে জানাচ্ছি যে: ${text}`,
-            `সহজ ভাষায়: ${text}`,
+            `আমার সোনার বাংলা, ${text}`,
+            `সহজ সুন্দর ভাষায়: ${text}`,
+            `বাংলা কিউবোর্ড স্টাইলে: ${text}`,
           ];
           break;
         case 'concise':
@@ -214,6 +254,17 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
     }, 350);
   };
 
+  // Filtered world languages
+  const filteredLanguages = SUPPORTED_LANGUAGES.filter((lang) => {
+    const matchesSearch =
+      lang.name.toLowerCase().includes(langSearch.toLowerCase()) ||
+      lang.nativeName.toLowerCase().includes(langSearch.toLowerCase()) ||
+      lang.id.toLowerCase().includes(langSearch.toLowerCase());
+    const matchesRegion =
+      selectedRegion === 'all' || lang.region === selectedRegion;
+    return matchesSearch && matchesRegion;
+  });
+
   if (activeView === 'normal' || activeView === 'more_tools') return null;
 
   return (
@@ -230,11 +281,12 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </button>
 
         <span className="font-semibold text-[#e3e2e6] tracking-wide uppercase text-[11px]">
+          {activeView === 'languages' && '🌐 Universal World Languages'}
           {activeView === 'sound_studio' && '🎵 Sound & Music Studio'}
           {activeView === 'translate' && '🌐 Real-Time Translator'}
           {activeView === 'clipboard' && '📋 Smart Clipboard'}
           {activeView === 'text_edit' && '✍️ Precise Text Cursor Control'}
-          {activeView === 'themes' && '🎨 Keyboard Themes'}
+          {activeView === 'themes' && '🎨 Keyboard Themes & Board'}
           {activeView === 'smart_ai' && '✨ Text Q Smart Assistant'}
         </span>
 
@@ -246,31 +298,105 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </button>
       </div>
 
-      {/* 0. SOUND & MUSIC STUDIO */}
-      {activeView === 'sound_studio' && (
-        <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
-          {/* Sound On / Off Toggle + Master Volume */}
-          <div className="p-2.5 rounded-xl bg-[#232429] border border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+      {/* 1. UNIVERSAL WORLD LANGUAGES SELECTOR */}
+      {activeView === 'languages' && (
+        <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9aa0a6]" />
+            <input
+              type="text"
+              value={langSearch}
+              onChange={(e) => setLangSearch(e.target.value)}
+              placeholder="Search 25+ world languages, countries..."
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#232429] text-white border border-white/10 outline-none text-xs focus:border-[#a8c7fa]"
+            />
+          </div>
+
+          {/* Region Tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'popular', label: 'Popular' },
+              { id: 'south_asia', label: 'South Asia' },
+              { id: 'middle_east', label: 'Middle East' },
+              { id: 'europe', label: 'Europe' },
+              { id: 'asia_pacific', label: 'Asia-Pacific' },
+              { id: 'americas', label: 'Americas' },
+            ].map((tab) => (
               <button
-                type="button"
-                onClick={() => {
-                  if (onUpdateSettings) {
-                    onUpdateSettings({ soundOnKeypress: !soundOnKeypress });
-                  }
-                }}
-                className={`p-2 rounded-lg flex items-center gap-1.5 font-semibold text-xs transition-colors ${
-                  soundOnKeypress
-                    ? 'bg-[#a8c7fa] text-[#062e6f]'
-                    : 'bg-[#2f3036] text-[#9aa0a6]'
+                key={tab.id}
+                onClick={() => setSelectedRegion(tab.id)}
+                className={`px-2 py-0.5 rounded-full text-[11px] whitespace-nowrap transition-colors ${
+                  selectedRegion === tab.id
+                    ? 'bg-[#a8c7fa] text-[#062e6f] font-bold'
+                    : 'bg-[#232429] text-[#9aa0a6] hover:text-white'
                 }`}
               >
-                {soundOnKeypress ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                <span>{soundOnKeypress ? 'Typing Sound: ON' : 'Typing Sound: OFF'}</span>
+                {tab.label}
               </button>
-            </div>
+            ))}
+          </div>
 
-            {/* Volume Slider */}
+          {/* Languages Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+            {filteredLanguages.map((lang) => {
+              const isActive = activeLanguage === lang.id;
+              return (
+                <button
+                  key={lang.id}
+                  onClick={() => {
+                    if (onLanguageChange) {
+                      onLanguageChange(lang.id);
+                    }
+                    if (onUpdateSettings) {
+                      onUpdateSettings({ activeLanguage: lang.id });
+                    }
+                    onClose();
+                  }}
+                  className={`p-2 rounded-xl text-left border flex items-center justify-between transition-all active:scale-95 ${
+                    isActive
+                      ? 'bg-[#a8c7fa]/20 border-[#a8c7fa] text-white ring-1 ring-[#a8c7fa]'
+                      : 'bg-[#232429] border-white/5 text-[#c4c6d0] hover:bg-[#2c2d35]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="text-base shrink-0">{lang.flag}</span>
+                    <div className="truncate">
+                      <p className="font-semibold text-xs truncate">{lang.nativeName}</p>
+                      <p className="text-[10px] text-[#9aa0a6] truncate">{lang.name}</p>
+                    </div>
+                  </div>
+                  {isActive && <Check className="w-3.5 h-3.5 text-[#a8c7fa] shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 2. SOUND & MUSIC STUDIO */}
+      {activeView === 'sound_studio' && (
+        <div className="space-y-2.5 max-h-52 overflow-y-auto pr-1">
+          {/* Sound On / Off Toggle + Master Volume */}
+          <div className="p-2.5 rounded-xl bg-[#232429] border border-white/10 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                if (onUpdateSettings) {
+                  onUpdateSettings({ soundOnKeypress: !soundOnKeypress });
+                }
+              }}
+              className={`p-2 rounded-lg flex items-center gap-1.5 font-semibold text-xs transition-colors ${
+                soundOnKeypress
+                  ? 'bg-[#a8c7fa] text-[#062e6f]'
+                  : 'bg-[#2f3036] text-[#9aa0a6]'
+              }`}
+            >
+              {soundOnKeypress ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              <span>{soundOnKeypress ? 'Typing Sound: ON' : 'Typing Sound: OFF'}</span>
+            </button>
+
             {soundOnKeypress && (
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-[#9aa0a6]">Vol:</span>
@@ -298,30 +424,34 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
           <div className="space-y-1">
             <p className="text-[11px] font-semibold text-[#c4c6d0]">Keyboard Sound Effects</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-              {SOUND_PROFILES.map((p) => {
-                const isSelected = soundProfile === p.id;
+              {SOUND_PROFILES.map((prof) => {
+                const isActive = soundProfile === prof.id;
                 return (
                   <button
-                    key={p.id}
-                    type="button"
+                    key={prof.id}
                     onClick={() => {
                       if (onUpdateSettings) {
-                        onUpdateSettings({ soundProfile: p.id, soundOnKeypress: true });
+                        onUpdateSettings({
+                          soundProfile: prof.id,
+                          soundOnKeypress: true,
+                        });
                       }
-                      soundEngine.playKeyClick('standard', soundVolume, p.id);
+                      soundEngine.playKeyClick('standard', soundVolume || 0.6, prof.id);
                     }}
-                    className={`p-2 rounded-lg border text-left flex flex-col justify-between transition-colors ${
-                      isSelected
-                        ? 'bg-[#1e2a38] border-[#a8c7fa] text-white ring-1 ring-[#a8c7fa]'
-                        : 'bg-[#232429] border-white/5 text-[#c4c6d0] hover:bg-[#2f3036]'
+                    className={`p-2 rounded-xl text-left border flex flex-col gap-0.5 transition-all active:scale-95 ${
+                      isActive && soundOnKeypress
+                        ? 'bg-[#a8c7fa]/20 border-[#a8c7fa] text-white ring-1 ring-[#a8c7fa]'
+                        : 'bg-[#232429] border-white/5 text-[#c4c6d0] hover:bg-[#2c2d35]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-[11px] truncate">{p.name}</span>
-                      {isSelected && <Check className="w-3 h-3 text-[#a8c7fa] shrink-0" />}
+                      <span className="font-semibold text-xs">{prof.name}</span>
+                      {isActive && soundOnKeypress && (
+                        <Check className="w-3 h-3 text-[#a8c7fa]" />
+                      )}
                     </div>
-                    <span className="text-[9px] text-[#9aa0a6] truncate mt-0.5">
-                      {p.subtitle}
+                    <span className="text-[10px] text-[#9aa0a6] line-clamp-1">
+                      {prof.subtitle}
                     </span>
                   </button>
                 );
@@ -329,38 +459,39 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
             </div>
           </div>
 
-          {/* Background Music Loops */}
-          <div className="space-y-1 pt-1 border-t border-white/5">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-[#c4c6d0] flex items-center gap-1.5">
-                <Music className="w-3.5 h-3.5 text-[#a8c7fa]" />
-                <span>Ambient Background Music</span>
-              </p>
-              {bgMusicTrack !== 'off' && (
-                <span className="text-[10px] text-[#a8c7fa] animate-pulse">Playing</span>
-              )}
-            </div>
+          {/* Ambient Background Music Loops */}
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold text-[#c4c6d0] flex items-center gap-1">
+              <Music className="w-3.5 h-3.5 text-[#a8c7fa]" />
+              <span>Ambient Background Music While Typing</span>
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
               {BG_MUSIC_TRACKS.map((track) => {
-                const isSelected = bgMusicTrack === track.id;
+                const isTrackActive = bgMusicTrack === track.id;
                 return (
                   <button
                     key={track.id}
-                    type="button"
                     onClick={() => {
                       if (onUpdateSettings) {
                         onUpdateSettings({ bgMusicTrack: track.id });
                       }
-                      soundEngine.setBackgroundMusic(track.id, soundVolume);
                     }}
-                    className={`p-1.5 rounded-lg border text-left flex flex-col transition-colors ${
-                      isSelected
-                        ? 'bg-[#1e2a38] border-[#a8c7fa] text-white ring-1 ring-[#a8c7fa]'
-                        : 'bg-[#232429] border-white/5 text-[#c4c6d0] hover:bg-[#2f3036]'
+                    className={`p-2 rounded-xl text-left border flex flex-col gap-0.5 transition-all active:scale-95 ${
+                      isTrackActive
+                        ? 'bg-[#a8c7fa]/25 border-[#a8c7fa] text-white ring-1 ring-[#a8c7fa]'
+                        : 'bg-[#232429] border-white/5 text-[#c4c6d0] hover:bg-[#2c2d35]'
                     }`}
                   >
-                    <span className="font-semibold text-[11px] truncate">{track.name}</span>
-                    <span className="text-[9px] text-[#9aa0a6] truncate">{track.subtitle}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-xs flex items-center gap-1">
+                        {track.id !== 'off' && <Disc className="w-3 h-3 text-[#a8c7fa]" />}
+                        {track.name}
+                      </span>
+                      {isTrackActive && <Check className="w-3 h-3 text-[#a8c7fa]" />}
+                    </div>
+                    <span className="text-[10px] text-[#9aa0a6] line-clamp-1">
+                      {track.subtitle}
+                    </span>
                   </button>
                 );
               })}
@@ -369,78 +500,76 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </div>
       )}
 
-      {/* 1. TRANSLATE */}
+      {/* 3. REAL-TIME TRANSLATOR */}
       {activeView === 'translate' && (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <select
-              value={sourceLang}
-              onChange={(e) => setSourceLang(e.target.value)}
-              className="bg-[#232429] text-white rounded px-2 py-1 border border-white/10 outline-none flex-1 text-xs"
-            >
-              {TRANSLATION_LANGUAGES.map((l) => (
-                <option key={`src-${l.code}`} value={l.code}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-            <span className="text-[#a8c7fa] font-bold">⇄</span>
-            <select
-              value={targetLang}
-              onChange={(e) => setTargetLang(e.target.value)}
-              className="bg-[#232429] text-white rounded px-2 py-1 border border-white/10 outline-none flex-1 text-xs"
-            >
-              {TRANSLATION_LANGUAGES.map((l) => (
-                <option key={`tgt-${l.code}`} value={l.code}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={transInput}
-              onChange={(e) => setTransInput(e.target.value)}
-              placeholder="Type or paste text to translate..."
-              className="flex-1 bg-[#1a1c22] text-white px-2.5 py-1.5 rounded border border-white/10 focus:border-[#a8c7fa] outline-none text-xs"
-            />
-            {transInput && (
-              <button
-                onClick={() => setTransInput('')}
-                className="px-2 py-1 bg-[#2f3036] text-[#c4c6d0] rounded hover:text-white"
+            <div className="flex items-center gap-1.5">
+              <select
+                value={sourceLang}
+                onChange={(e) => setSourceLang(e.target.value)}
+                className="bg-[#232429] text-white px-2 py-1 rounded border border-white/10 outline-none text-xs"
               >
-                Clear
+                {TRANSLATION_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+              <span className="text-[#9aa0a6]">➔</span>
+              <select
+                value={targetLang}
+                onChange={(e) => setTargetLang(e.target.value)}
+                className="bg-[#232429] text-white px-2 py-1 rounded border border-white/10 outline-none text-xs"
+              >
+                {TRANSLATION_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {transOutput && (
+              <button
+                onClick={() => {
+                  onInsertText(transOutput);
+                  onClose();
+                }}
+                className="px-2.5 py-1 bg-[#a8c7fa] text-[#062e6f] font-bold rounded hover:bg-[#b8d2fc] flex items-center gap-1"
+              >
+                <span>Insert</span>
               </button>
             )}
           </div>
 
-          {transOutput && (
-            <div className="p-2 rounded bg-[#232429] border border-white/10 flex items-center justify-between gap-2">
-              <span className="text-white font-medium text-xs flex-1 truncate">
-                {transOutput}
-              </span>
-              <button
-                onClick={() => {
-                  onReplaceAllText(transOutput);
-                  onClose();
-                }}
-                className="px-2.5 py-1 bg-[#a8c7fa] text-[#062e6f] font-bold rounded hover:bg-[#b8d2fc] shrink-0"
-              >
-                Insert
-              </button>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              value={transInput}
+              onChange={(e) => setTransInput(e.target.value)}
+              placeholder="Type or paste to translate..."
+              className="bg-[#1a1c22] text-white p-2 rounded-lg border border-white/10 outline-none text-xs"
+            />
+            <div className="bg-[#232429] text-white p-2 rounded-lg border border-white/10 text-xs flex items-center">
+              {isTranslating ? (
+                <span className="text-[#9aa0a6] animate-pulse">Translating...</span>
+              ) : transOutput ? (
+                <span className="text-[#a8c7fa] font-medium">{transOutput}</span>
+              ) : (
+                <span className="text-[#9aa0a6]">Translation will appear here</span>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
 
-      {/* 2. CLIPBOARD */}
+      {/* 4. SMART CLIPBOARD */}
       {activeView === 'clipboard' && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-[#9aa0a6]">
-              {clipboardItems.length} items saved
+              {clipboardItems.length} clips stored
             </span>
             <div className="flex gap-1.5">
               <button
@@ -523,7 +652,7 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </div>
       )}
 
-      {/* 3. TEXT EDITING CURSOR CONTROL */}
+      {/* 5. TEXT EDITING CURSOR CONTROL */}
       {activeView === 'text_edit' && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -616,9 +745,9 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </div>
       )}
 
-      {/* 4. THEMES & BOARD STUDIO SELECTOR */}
+      {/* 6. THEMES & BOARD STUDIO SELECTOR */}
       {(activeView === 'themes' || activeView === 'board_studio') && (
-        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
           {/* Direct Button to Open Full Board Studio */}
           {onOpenBoardStudio && (
             <button
@@ -680,7 +809,7 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </div>
       )}
 
-      {/* 5. SMART AI ASSISTANT */}
+      {/* 7. SMART AI ASSISTANT */}
       {activeView === 'smart_ai' && (
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">

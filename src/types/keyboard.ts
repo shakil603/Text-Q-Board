@@ -1,22 +1,70 @@
 export type LanguageId = 
   | 'en_us'
+  | 'en_gb'
   | 'bn_phonetic'
   | 'bn_jatiya'
   | 'bn_probhat'
   | 'es_es'
+  | 'pt_br'
   | 'fr_fr'
   | 'de_de'
   | 'ar_sa'
+  | 'ur_pk'
+  | 'fa_ir'
   | 'hi_in'
-  | 'ru_ru';
+  | 'hi_phonetic'
+  | 'ta_in'
+  | 'te_in'
+  | 'ja_jp'
+  | 'zh_cn'
+  | 'ko_kr'
+  | 'ru_ru'
+  | 'it_it'
+  | 'tr_tr'
+  | 'id_id'
+  | 'vi_vn'
+  | 'th_th'
+  | 'nl_nl'
+  | 'pl_pl'
+  | 'sv_se';
+
+export type UILocaleId = 
+  | 'en'
+  | 'bn'
+  | 'es'
+  | 'pt'
+  | 'fr'
+  | 'de'
+  | 'ar'
+  | 'hi'
+  | 'ja'
+  | 'zh'
+  | 'ko'
+  | 'ru'
+  | 'it'
+  | 'tr'
+  | 'id'
+  | 'vi';
+
+export type LanguageRegion =
+  | 'all'
+  | 'popular'
+  | 'americas'
+  | 'europe'
+  | 'asia_pacific'
+  | 'south_asia'
+  | 'middle_east';
 
 export interface LanguageInfo {
   id: LanguageId;
   name: string;
   nativeName: string;
   flag: string;
+  region: LanguageRegion;
+  script: string;
   defaultLayout: string;
   availableLayouts: string[];
+  isRtl?: boolean;
 }
 
 export type KeyType = 
@@ -50,6 +98,7 @@ export interface KeyboardRow {
 export interface KeyboardLayoutDef {
   id: string;
   name: string;
+  isRtl?: boolean;
   rows: KeyboardRow[];
   shiftRows?: KeyboardRow[];
 }
@@ -203,6 +252,7 @@ export interface KeyboardSettings {
   theme: ThemeId;
   activeLanguage: LanguageId;
   enabledLanguages: LanguageId[];
+  uiLocale: UILocaleId;
   incognito: boolean;
   customShortcuts: { shortcut: string; expanded: string }[];
 
@@ -243,6 +293,7 @@ export type ToolbarView =
   | 'more_tools'
   | 'sound_studio'
   | 'board_studio'
+  | 'languages'
   | 'translate'
   | 'clipboard'
   | 'text_edit'

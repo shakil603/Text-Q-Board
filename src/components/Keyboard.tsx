@@ -43,15 +43,32 @@ interface KeyboardProps {
 
 const LANGUAGE_LABELS: Record<string, string> = {
   en_us: 'English (US)',
+  en_gb: 'English (UK)',
   bn_phonetic: 'বাংলা • English',
   bn_jatiya: 'বাংলা (জাতীয়)',
   bn_probhat: 'বাংলা (प्रभात)',
   es_es: 'Español',
+  pt_br: 'Português',
   fr_fr: 'Français',
   de_de: 'Deutsch',
   ar_sa: 'العربية',
+  ur_pk: 'اردو',
+  fa_ir: 'فارسی',
   hi_in: 'हिन्दी',
+  ta_in: 'தமிழ்',
+  te_in: 'తెలుగు',
+  ja_jp: '日本語',
+  zh_cn: '中文',
+  ko_kr: '한국어',
   ru_ru: 'Русский',
+  it_it: 'Italiano',
+  tr_tr: 'Türkçe',
+  id_id: 'Bahasa Indonesia',
+  vi_vn: 'Tiếng Việt',
+  th_th: 'ไทย',
+  nl_nl: 'Nederlands',
+  pl_pl: 'Polski',
+  sv_se: 'Svenska',
 };
 
 export const Keyboard: React.FC<KeyboardProps> = ({

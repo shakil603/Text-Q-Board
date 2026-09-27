@@ -14,7 +14,9 @@ import {
   EyeOff,
   Volume2,
   VolumeX,
-  Music
+  Music,
+  Globe,
+  Sparkles
 } from 'lucide-react';
 import { ThemeConfig, ToolbarView } from '../types/keyboard';
 
@@ -25,6 +27,7 @@ interface SuggestionStripProps {
   setActiveToolbarView: (view: ToolbarView) => void;
   onStartVoiceTyping: () => void;
   onOpenSettings?: () => void;
+  onOpenBoardStudio?: () => void;
   onHideKeyboard?: () => void;
   theme: ThemeConfig;
   incognito?: boolean;
@@ -43,6 +46,7 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
   setActiveToolbarView,
   onStartVoiceTyping,
   onOpenSettings,
+  onOpenBoardStudio,
   onHideKeyboard,
   theme,
   incognito = false,
@@ -106,19 +110,25 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
       {/* Center Area: Word Suggestions OR Gboard Quick Action Strip */}
       {isMenuOpen || suggestions.length === 0 ? (
         <div className="flex-1 flex items-center justify-around px-1 overflow-x-auto no-scrollbar">
+          {/* Universal Language Switcher */}
           <button
             type="button"
-            onClick={() => setActiveToolbarView('emoji_picker')}
+            onClick={() =>
+              setActiveToolbarView(
+                activeToolbarView === 'languages' ? 'normal' : 'languages'
+              )
+            }
             className={`p-2 rounded-full transition-colors ${
-              activeToolbarView === 'emoji_picker'
+              activeToolbarView === 'languages'
                 ? theme.suggestionActiveBg
                 : `${theme.textSecondary} hover:bg-white/10`
             }`}
-            title="Emojis & GIFs"
+            title="World Languages & Switcher"
           >
-            <Smile className="w-[18px] h-[18px]" />
+            <Globe className="w-[18px] h-[18px]" />
           </button>
 
+          {/* Sound & Music Studio */}
           <button
             type="button"
             onClick={() =>
@@ -142,9 +152,54 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
             )}
           </button>
 
+          {/* Board Studio & Themes */}
           <button
             type="button"
-            onClick={() => setActiveToolbarView('clipboard')}
+            onClick={() => {
+              if (onOpenBoardStudio) {
+                onOpenBoardStudio();
+              } else {
+                setActiveToolbarView(
+                  activeToolbarView === 'themes' ? 'normal' : 'themes'
+                );
+              }
+            }}
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'themes' || activeToolbarView === 'board_studio'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
+            title="Board Studio & Customizer"
+          >
+            <Palette className="w-[18px] h-[18px]" />
+          </button>
+
+          {/* Emojis & GIFs */}
+          <button
+            type="button"
+            onClick={() =>
+              setActiveToolbarView(
+                activeToolbarView === 'emoji_picker' ? 'normal' : 'emoji_picker'
+              )
+            }
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'emoji_picker'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
+            title="Emojis & GIFs"
+          >
+            <Smile className="w-[18px] h-[18px]" />
+          </button>
+
+          {/* Clipboard */}
+          <button
+            type="button"
+            onClick={() =>
+              setActiveToolbarView(
+                activeToolbarView === 'clipboard' ? 'normal' : 'clipboard'
+              )
+            }
             className={`p-2 rounded-full transition-colors ${
               activeToolbarView === 'clipboard'
                 ? theme.suggestionActiveBg
@@ -155,9 +210,14 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
             <Clipboard className="w-[18px] h-[18px]" />
           </button>
 
+          {/* Translate */}
           <button
             type="button"
-            onClick={() => setActiveToolbarView('translate')}
+            onClick={() =>
+              setActiveToolbarView(
+                activeToolbarView === 'translate' ? 'normal' : 'translate'
+              )
+            }
             className={`p-2 rounded-full transition-colors ${
               activeToolbarView === 'translate'
                 ? theme.suggestionActiveBg
@@ -168,22 +228,14 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
             <Languages className="w-[18px] h-[18px]" />
           </button>
 
+          {/* Text Editing Cursor Control */}
           <button
             type="button"
-            onClick={() => setActiveToolbarView('themes')}
-            className={`p-2 rounded-full transition-colors ${
-              activeToolbarView === 'themes'
-                ? theme.suggestionActiveBg
-                : `${theme.textSecondary} hover:bg-white/10`
-            }`}
-            title="Themes"
-          >
-            <Palette className="w-[18px] h-[18px]" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveToolbarView('text_edit')}
+            onClick={() =>
+              setActiveToolbarView(
+                activeToolbarView === 'text_edit' ? 'normal' : 'text_edit'
+              )
+            }
             className={`p-2 rounded-full transition-colors ${
               activeToolbarView === 'text_edit'
                 ? theme.suggestionActiveBg
@@ -248,8 +300,8 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
                   className={`flex-1 mx-1 px-2 py-1 text-center text-[14px] rounded-md truncate transition-colors ${
                     isPrimary
                       ? `${theme.textPrimary} font-semibold`
-                      : `${theme.textSecondary} font-normal hover:bg-white/5`
-                  }`}
+                      : `${theme.textSecondary}`
+                  } hover:bg-white/10 active:scale-95`}
                 >
                   {word}
                 </button>
@@ -259,35 +311,12 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
         </div>
       )}
 
-      {/* Right Quick Sound/Music Studio Button & Voice Typing Microphone Icon */}
-      <div className="flex items-center gap-0.5 shrink-0">
-        <button
-          type="button"
-          onClick={() =>
-            setActiveToolbarView(
-              activeToolbarView === 'sound_studio' ? 'normal' : 'sound_studio'
-            )
-          }
-          className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-            activeToolbarView === 'sound_studio'
-              ? theme.suggestionActiveBg
-              : `${theme.textSecondary} hover:bg-white/10`
-          }`}
-          title="Typing Sound & Music"
-        >
-          {bgMusicActive ? (
-            <Music className="w-[17px] h-[17px] text-[#a8c7fa]" />
-          ) : soundOnKeypress ? (
-            <Volume2 className="w-[17px] h-[17px]" />
-          ) : (
-            <VolumeX className="w-[17px] h-[17px] opacity-55" />
-          )}
-        </button>
-
+      {/* Right Voice Dictation Button / Keyboard Down Button */}
+      <div className="flex items-center gap-0.5">
         <button
           type="button"
           onClick={onStartVoiceTyping}
-          className={`w-9 h-8 flex items-center justify-center rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10 active:bg-white/20`}
+          className={`w-9 h-8 flex items-center justify-center rounded-full ${theme.textSecondary} hover:bg-white/10`}
           title="Voice Typing"
         >
           <Mic className="w-[18px] h-[18px]" />
@@ -297,10 +326,10 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
           <button
             type="button"
             onClick={onHideKeyboard}
-            className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${theme.textSecondary} hover:bg-white/10`}
+            className={`w-8 h-8 flex items-center justify-center rounded-full ${theme.textSecondary} hover:bg-white/10 opacity-70 hover:opacity-100`}
             title="Hide Keyboard"
           >
-            <ChevronDown className="w-[18px] h-[18px]" />
+            <ChevronDown className="w-4 h-4" />
           </button>
         )}
       </div>

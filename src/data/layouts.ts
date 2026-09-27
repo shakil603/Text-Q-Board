@@ -6,22 +6,38 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
     name: 'English (US)',
     nativeName: 'English (US)',
     flag: '🇺🇸',
+    region: 'popular',
+    script: 'Latin',
     defaultLayout: 'qwerty',
     availableLayouts: ['qwerty', 'qwertz', 'azerty', 'dvorak'],
+  },
+  {
+    id: 'en_gb',
+    name: 'English (UK)',
+    nativeName: 'English (UK)',
+    flag: '🇬🇧',
+    region: 'europe',
+    script: 'Latin',
+    defaultLayout: 'qwerty',
+    availableLayouts: ['qwerty'],
   },
   {
     id: 'bn_phonetic',
     name: 'Bengali (Phonetic)',
     nativeName: 'বাংলা (ফোনেটিক)',
     flag: '🇧🇩',
+    region: 'south_asia',
+    script: 'Bengali',
     defaultLayout: 'bengali_phonetic',
     availableLayouts: ['bengali_phonetic', 'bengali_jatiya', 'bengali_probhat'],
   },
   {
     id: 'bn_jatiya',
-    name: 'Bengali (Jatiya / জাতীয়)',
+    name: 'Bengali (Jatiya)',
     nativeName: 'বাংলা (জাতীয়)',
     flag: '🇧🇩',
+    region: 'south_asia',
+    script: 'Bengali',
     defaultLayout: 'bengali_jatiya',
     availableLayouts: ['bengali_jatiya', 'bengali_probhat', 'bengali_phonetic'],
   },
@@ -30,6 +46,8 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
     name: 'Bengali (Probhat)',
     nativeName: 'বাংলা (प्रभात)',
     flag: '🇧🇩',
+    region: 'south_asia',
+    script: 'Bengali',
     defaultLayout: 'bengali_probhat',
     availableLayouts: ['bengali_probhat', 'bengali_jatiya', 'bengali_phonetic'],
   },
@@ -38,14 +56,28 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
     name: 'Spanish',
     nativeName: 'Español',
     flag: '🇪🇸',
+    region: 'popular',
+    script: 'Latin',
     defaultLayout: 'spanish_qwerty',
     availableLayouts: ['spanish_qwerty'],
+  },
+  {
+    id: 'pt_br',
+    name: 'Portuguese (Brazil / Portugal)',
+    nativeName: 'Português',
+    flag: '🇧🇷',
+    region: 'americas',
+    script: 'Latin',
+    defaultLayout: 'portuguese_qwerty',
+    availableLayouts: ['portuguese_qwerty'],
   },
   {
     id: 'fr_fr',
     name: 'French',
     nativeName: 'Français',
     flag: '🇫🇷',
+    region: 'europe',
+    script: 'Latin',
     defaultLayout: 'french_azerty',
     availableLayouts: ['french_azerty'],
   },
@@ -54,6 +86,8 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
     name: 'German',
     nativeName: 'Deutsch',
     flag: '🇩🇪',
+    region: 'europe',
+    script: 'Latin',
     defaultLayout: 'german_qwertz',
     availableLayouts: ['german_qwertz'],
   },
@@ -62,28 +96,187 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
     name: 'Arabic',
     nativeName: 'العربية',
     flag: '🇸🇦',
+    region: 'middle_east',
+    script: 'Arabic',
+    isRtl: true,
     defaultLayout: 'arabic_standard',
     availableLayouts: ['arabic_standard'],
+  },
+  {
+    id: 'ur_pk',
+    name: 'Urdu',
+    nativeName: 'اردو',
+    flag: '🇵🇰',
+    region: 'middle_east',
+    script: 'Arabic-Urdu',
+    isRtl: true,
+    defaultLayout: 'urdu_standard',
+    availableLayouts: ['urdu_standard'],
+  },
+  {
+    id: 'fa_ir',
+    name: 'Persian / Farsi',
+    nativeName: 'فارسی',
+    flag: '🇮🇷',
+    region: 'middle_east',
+    script: 'Perso-Arabic',
+    isRtl: true,
+    defaultLayout: 'persian_standard',
+    availableLayouts: ['persian_standard'],
   },
   {
     id: 'hi_in',
     name: 'Hindi',
     nativeName: 'हिन्दी',
     flag: '🇮🇳',
+    region: 'south_asia',
+    script: 'Devanagari',
     defaultLayout: 'hindi_inscript',
     availableLayouts: ['hindi_inscript', 'hindi_phonetic'],
+  },
+  {
+    id: 'ta_in',
+    name: 'Tamil',
+    nativeName: 'தமிழ்',
+    flag: '🇮🇳',
+    region: 'south_asia',
+    script: 'Tamil',
+    defaultLayout: 'tamil_inscript',
+    availableLayouts: ['tamil_inscript'],
+  },
+  {
+    id: 'te_in',
+    name: 'Telugu',
+    nativeName: 'తెలుగు',
+    flag: '🇮🇳',
+    region: 'south_asia',
+    script: 'Telugu',
+    defaultLayout: 'telugu_inscript',
+    availableLayouts: ['telugu_inscript'],
+  },
+  {
+    id: 'ja_jp',
+    name: 'Japanese',
+    nativeName: '日本語',
+    flag: '🇯🇵',
+    region: 'asia_pacific',
+    script: 'Japanese Kana/Kanji',
+    defaultLayout: 'japanese_romaji',
+    availableLayouts: ['japanese_romaji'],
+  },
+  {
+    id: 'zh_cn',
+    name: 'Chinese (Simplified)',
+    nativeName: '简体中文',
+    flag: '🇨🇳',
+    region: 'asia_pacific',
+    script: 'Han (Simplified)',
+    defaultLayout: 'chinese_pinyin',
+    availableLayouts: ['chinese_pinyin'],
+  },
+  {
+    id: 'ko_kr',
+    name: 'Korean',
+    nativeName: '한국어',
+    flag: '🇰🇷',
+    region: 'asia_pacific',
+    script: 'Hangul',
+    defaultLayout: 'korean_2set',
+    availableLayouts: ['korean_2set'],
   },
   {
     id: 'ru_ru',
     name: 'Russian',
     nativeName: 'Русский',
     flag: '🇷🇺',
+    region: 'europe',
+    script: 'Cyrillic',
     defaultLayout: 'russian_standard',
     availableLayouts: ['russian_standard'],
   },
+  {
+    id: 'it_it',
+    name: 'Italian',
+    nativeName: 'Italiano',
+    flag: '🇮🇹',
+    region: 'europe',
+    script: 'Latin',
+    defaultLayout: 'italian_qwerty',
+    availableLayouts: ['italian_qwerty'],
+  },
+  {
+    id: 'tr_tr',
+    name: 'Turkish',
+    nativeName: 'Türkçe',
+    flag: '🇹🇷',
+    region: 'middle_east',
+    script: 'Latin-Turkish',
+    defaultLayout: 'turkish_qwerty',
+    availableLayouts: ['turkish_qwerty'],
+  },
+  {
+    id: 'id_id',
+    name: 'Indonesian',
+    nativeName: 'Bahasa Indonesia',
+    flag: '🇮🇩',
+    region: 'asia_pacific',
+    script: 'Latin',
+    defaultLayout: 'indonesian_qwerty',
+    availableLayouts: ['indonesian_qwerty'],
+  },
+  {
+    id: 'vi_vn',
+    name: 'Vietnamese',
+    nativeName: 'Tiếng Việt',
+    flag: '🇻🇳',
+    region: 'asia_pacific',
+    script: 'Latin-Viet',
+    defaultLayout: 'vietnamese_telex',
+    availableLayouts: ['vietnamese_telex'],
+  },
+  {
+    id: 'th_th',
+    name: 'Thai',
+    nativeName: 'ไทย',
+    flag: '🇹🇭',
+    region: 'asia_pacific',
+    script: 'Thai',
+    defaultLayout: 'thai_kedmanee',
+    availableLayouts: ['thai_kedmanee'],
+  },
+  {
+    id: 'nl_nl',
+    name: 'Dutch',
+    nativeName: 'Nederlands',
+    flag: '🇳🇱',
+    region: 'europe',
+    script: 'Latin',
+    defaultLayout: 'qwerty',
+    availableLayouts: ['qwerty'],
+  },
+  {
+    id: 'pl_pl',
+    name: 'Polish',
+    nativeName: 'Polski',
+    flag: '🇵🇱',
+    region: 'europe',
+    script: 'Latin',
+    defaultLayout: 'polish_qwerty',
+    availableLayouts: ['polish_qwerty'],
+  },
+  {
+    id: 'sv_se',
+    name: 'Swedish',
+    nativeName: 'Svenska',
+    flag: '🇸🇪',
+    region: 'europe',
+    script: 'Latin',
+    defaultLayout: 'swedish_qwerty',
+    availableLayouts: ['swedish_qwerty'],
+  },
 ];
 
-// QWERTY Layout
+// QWERTY Layout (English US / International)
 export const QWERTY_LAYOUT: KeyboardLayoutDef = {
   id: 'qwerty',
   name: 'QWERTY',
@@ -99,7 +292,7 @@ export const QWERTY_LAYOUT: KeyboardLayoutDef = {
         { primary: 'u', secondary: '7', popup: ['7', 'ú', 'ù', 'û', 'ü', 'ū'] },
         { primary: 'i', secondary: '8', popup: ['8', 'í', 'ì', 'î', 'ï', 'ī'] },
         { primary: 'o', secondary: '9', popup: ['9', 'ó', 'ò', 'ô', 'ö', 'õ', 'ø', 'œ'] },
-        { primary: 'p', secondary: '0', popup: ['0', 'π', '¶', '0'] },
+        { primary: 'p', secondary: '0', popup: ['0', 'π', '¶'] },
       ],
     },
     {
@@ -316,6 +509,65 @@ export const SPANISH_LAYOUT: KeyboardLayoutDef = {
   ],
 };
 
+// Portuguese QWERTY (with Ç, ã, é)
+export const PORTUGUESE_LAYOUT: KeyboardLayoutDef = {
+  id: 'portuguese_qwerty',
+  name: 'Português',
+  rows: [
+    {
+      keys: [
+        { primary: 'q', secondary: '1' },
+        { primary: 'w', secondary: '2' },
+        { primary: 'e', secondary: '3', popup: ['é', 'ê', '3'] },
+        { primary: 'r', secondary: '4' },
+        { primary: 't', secondary: '5' },
+        { primary: 'y', secondary: '6' },
+        { primary: 'u', secondary: '7', popup: ['ú', '7'] },
+        { primary: 'i', secondary: '8', popup: ['í', '8'] },
+        { primary: 'o', secondary: '9', popup: ['ó', 'ô', 'õ', '9'] },
+        { primary: 'p', secondary: '0' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'a', secondary: '@', popup: ['á', 'à', 'â', 'ã', '@'] },
+        { primary: 's', secondary: '#' },
+        { primary: 'd', secondary: '$' },
+        { primary: 'f', secondary: '_' },
+        { primary: 'g', secondary: '&' },
+        { primary: 'h', secondary: '-' },
+        { primary: 'j', secondary: '+' },
+        { primary: 'k', secondary: '(' },
+        { primary: 'l', secondary: ')' },
+        { primary: 'ç', secondary: 'Ç', popup: ['ç', 'Ç'] },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'Shift', type: 'shift', width: 1.3 },
+        { primary: 'z', secondary: '*' },
+        { primary: 'x', secondary: '"' },
+        { primary: 'c', secondary: "'" },
+        { primary: 'v', secondary: ':' },
+        { primary: 'b', secondary: ';' },
+        { primary: 'n', secondary: '!' },
+        { primary: 'm', secondary: '?' },
+        { primary: 'Backspace', type: 'backspace', width: 1.3 },
+      ],
+    },
+    {
+      keys: [
+        { primary: '?123', type: 'symbols', width: 1.48 },
+        { primary: ',', popup: [',', '!'] },
+        { primary: '🌐', type: 'globe', width: 1 },
+        { primary: 'Português', type: 'space', width: 4.04 },
+        { primary: '.', popup: ['.', ',', '?', '!'] },
+        { primary: 'Enter', type: 'enter', width: 1.48 },
+      ],
+    },
+  ],
+};
+
 // French AZERTY
 export const FRENCH_LAYOUT: KeyboardLayoutDef = {
   id: 'french_azerty',
@@ -392,7 +644,7 @@ export const GERMAN_LAYOUT: KeyboardLayoutDef = {
         { primary: 'i', secondary: '8' },
         { primary: 'o', secondary: '9', popup: ['ö', '9'] },
         { primary: 'p', secondary: '0' },
-        { primary: 'ü', secondary: 'Ü', popup: ['ü', 'Ü'] },
+        { primary: 'ü', secondary: 'Ü' },
       ],
     },
     {
@@ -406,8 +658,8 @@ export const GERMAN_LAYOUT: KeyboardLayoutDef = {
         { primary: 'j', secondary: '+' },
         { primary: 'k', secondary: '(' },
         { primary: 'l', secondary: ')' },
-        { primary: 'ö', secondary: 'Ö', popup: ['ö', 'Ö'] },
-        { primary: 'ä', secondary: 'Ä', popup: ['ä', 'Ä'] },
+        { primary: 'ö', secondary: 'Ö' },
+        { primary: 'ä', secondary: 'Ä' },
       ],
     },
     {
@@ -436,10 +688,11 @@ export const GERMAN_LAYOUT: KeyboardLayoutDef = {
   ],
 };
 
-// Arabic Standard
+// Arabic Standard (العربية)
 export const ARABIC_LAYOUT: KeyboardLayoutDef = {
   id: 'arabic_standard',
   name: 'العربية',
+  isRtl: true,
   rows: [
     {
       keys: [
@@ -501,7 +754,65 @@ export const ARABIC_LAYOUT: KeyboardLayoutDef = {
   ],
 };
 
-// Hindi Inscript
+// Urdu Standard (اردو)
+export const URDU_LAYOUT: KeyboardLayoutDef = {
+  id: 'urdu_standard',
+  name: 'اردو',
+  isRtl: true,
+  rows: [
+    {
+      keys: [
+        { primary: 'ٹ', secondary: '۱' },
+        { primary: 'پ', secondary: '۲' },
+        { primary: 'ت', secondary: '۳' },
+        { primary: 'ب', secondary: '۴' },
+        { primary: 'ج', secondary: '۵' },
+        { primary: 'چ', secondary: '۶' },
+        { primary: 'ح', secondary: '۷' },
+        { primary: 'خ', secondary: '۸' },
+        { primary: 'د', secondary: '۹' },
+        { primary: 'ڈ', secondary: '۰' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'ا', secondary: 'آ' },
+        { primary: 'س', secondary: 'ش' },
+        { primary: 'ی', secondary: 'ے' },
+        { primary: 'ن', secondary: 'ں' },
+        { primary: 'م', secondary: 'ل' },
+        { primary: 'ک', secondary: 'گ' },
+        { primary: 'ر', secondary: 'ڑ' },
+        { primary: 'و', secondary: 'ؤ' },
+        { primary: 'ہ', secondary: 'ھ' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'Shift', type: 'shift', width: 1.3 },
+        { primary: 'ز', secondary: 'ژ' },
+        { primary: 'ف', secondary: 'ق' },
+        { primary: 'ص', secondary: 'ض' },
+        { primary: 'ط', secondary: 'ظ' },
+        { primary: 'ع', secondary: 'غ' },
+        { primary: 'ث', secondary: 'ذ' },
+        { primary: 'Backspace', type: 'backspace', width: 1.3 },
+      ],
+    },
+    {
+      keys: [
+        { primary: '؟۱۲۳', type: 'symbols', width: 1.48 },
+        { primary: '،' },
+        { primary: '🌐', type: 'globe', width: 1 },
+        { primary: 'اردو', type: 'space', width: 4.04 },
+        { primary: '۔' },
+        { primary: 'Enter', type: 'enter', width: 1.48 },
+      ],
+    },
+  ],
+};
+
+// Hindi InScript (हिन्दी)
 export const HINDI_LAYOUT: KeyboardLayoutDef = {
   id: 'hindi_inscript',
   name: 'हिन्दी',
@@ -562,7 +873,7 @@ export const HINDI_LAYOUT: KeyboardLayoutDef = {
   ],
 };
 
-// Russian Standard
+// Russian Standard (Русский)
 export const RUSSIAN_LAYOUT: KeyboardLayoutDef = {
   id: 'russian_standard',
   name: 'Русский',
@@ -620,6 +931,302 @@ export const RUSSIAN_LAYOUT: KeyboardLayoutDef = {
         { primary: '🌐', type: 'globe', width: 1 },
         { primary: 'Русский', type: 'space', width: 4.04 },
         { primary: '.' },
+        { primary: 'Enter', type: 'enter', width: 1.48 },
+      ],
+    },
+  ],
+};
+
+// Korean 2-Set Hangul (한국어)
+export const KOREAN_LAYOUT: KeyboardLayoutDef = {
+  id: 'korean_2set',
+  name: '한국어 (두벌식)',
+  rows: [
+    {
+      keys: [
+        { primary: 'ㅂ', secondary: 'ㅃ' },
+        { primary: 'ㅈ', secondary: 'ㅉ' },
+        { primary: 'ㄷ', secondary: 'ㄸ' },
+        { primary: 'ㄱ', secondary: 'ㄲ' },
+        { primary: 'ㅅ', secondary: 'ㅆ' },
+        { primary: 'ㅛ', secondary: '1' },
+        { primary: 'ㅕ', secondary: '2' },
+        { primary: 'ㅑ', secondary: '3' },
+        { primary: 'ㅐ', secondary: 'ㅒ' },
+        { primary: 'ㅔ', secondary: 'ㅖ' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'ㅁ', secondary: '4' },
+        { primary: 'ㄴ', secondary: '5' },
+        { primary: 'ㅇ', secondary: '6' },
+        { primary: 'ㄹ', secondary: '7' },
+        { primary: 'ㅎ', secondary: '8' },
+        { primary: 'ㅗ', secondary: '9' },
+        { primary: 'ㅓ', secondary: '0' },
+        { primary: 'ㅏ', secondary: '@' },
+        { primary: 'ㅣ', secondary: '#' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'Shift', type: 'shift', width: 1.4 },
+        { primary: 'ㅋ', secondary: '*' },
+        { primary: 'ㅌ', secondary: '-' },
+        { primary: 'ㅊ', secondary: '+' },
+        { primary: 'ㅍ', secondary: '=' },
+        { primary: 'ㅠ', secondary: '(' },
+        { primary: 'ㅜ', secondary: ')' },
+        { primary: 'ㅡ', secondary: '!' },
+        { primary: 'Backspace', type: 'backspace', width: 1.4 },
+      ],
+    },
+    {
+      keys: [
+        { primary: '?123', type: 'symbols', width: 1.48 },
+        { primary: ',', popup: [',', '~'] },
+        { primary: '🌐', type: 'globe', width: 1 },
+        { primary: '한국어', type: 'space', width: 4.04 },
+        { primary: '.', popup: ['.', '?', '!'] },
+        { primary: 'Enter', type: 'enter', width: 1.48 },
+      ],
+    },
+  ],
+};
+
+// Japanese Romaji & Hiragana (日本語)
+export const JAPANESE_LAYOUT: KeyboardLayoutDef = {
+  id: 'japanese_romaji',
+  name: '日本語 (Romaji)',
+  rows: [
+    {
+      keys: [
+        { primary: 'q', secondary: '1' },
+        { primary: 'w', secondary: '2' },
+        { primary: 'e', secondary: '3' },
+        { primary: 'r', secondary: '4' },
+        { primary: 't', secondary: '5' },
+        { primary: 'y', secondary: '6' },
+        { primary: 'u', secondary: '7' },
+        { primary: 'i', secondary: '8' },
+        { primary: 'o', secondary: '9' },
+        { primary: 'p', secondary: '0' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'a', secondary: '@' },
+        { primary: 's', secondary: '#' },
+        { primary: 'd', secondary: '$' },
+        { primary: 'f', secondary: '_' },
+        { primary: 'g', secondary: '&' },
+        { primary: 'h', secondary: '-' },
+        { primary: 'j', secondary: '+' },
+        { primary: 'k', secondary: '(' },
+        { primary: 'l', secondary: ')' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'Shift', type: 'shift', width: 1.5 },
+        { primary: 'z', secondary: '*' },
+        { primary: 'x', secondary: '"' },
+        { primary: 'c', secondary: "'" },
+        { primary: 'v', secondary: ':' },
+        { primary: 'b', secondary: ';' },
+        { primary: 'n', secondary: '!' },
+        { primary: 'm', secondary: '?' },
+        { primary: 'Backspace', type: 'backspace', width: 1.5 },
+      ],
+    },
+    {
+      keys: [
+        { primary: '?123', type: 'symbols', width: 1.48 },
+        { primary: '、', popup: ['、', ','] },
+        { primary: '🌐', type: 'globe', width: 1 },
+        { primary: '日本語', type: 'space', width: 4.04 },
+        { primary: '。', popup: ['。', '.'] },
+        { primary: 'Enter', type: 'enter', width: 1.48 },
+      ],
+    },
+  ],
+};
+
+// Chinese Pinyin (中文)
+export const CHINESE_LAYOUT: KeyboardLayoutDef = {
+  id: 'chinese_pinyin',
+  name: '中文 (Pinyin)',
+  rows: [
+    {
+      keys: [
+        { primary: 'q', secondary: '1' },
+        { primary: 'w', secondary: '2' },
+        { primary: 'e', secondary: '3' },
+        { primary: 'r', secondary: '4' },
+        { primary: 't', secondary: '5' },
+        { primary: 'y', secondary: '6' },
+        { primary: 'u', secondary: '7' },
+        { primary: 'i', secondary: '8' },
+        { primary: 'o', secondary: '9' },
+        { primary: 'p', secondary: '0' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'a', secondary: '@' },
+        { primary: 's', secondary: '#' },
+        { primary: 'd', secondary: '$' },
+        { primary: 'f', secondary: '_' },
+        { primary: 'g', secondary: '&' },
+        { primary: 'h', secondary: '-' },
+        { primary: 'j', secondary: '+' },
+        { primary: 'k', secondary: '(' },
+        { primary: 'l', secondary: ')' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'Shift', type: 'shift', width: 1.5 },
+        { primary: 'z', secondary: '*' },
+        { primary: 'x', secondary: '"' },
+        { primary: 'c', secondary: "'" },
+        { primary: 'v', secondary: 'ü' },
+        { primary: 'b', secondary: ';' },
+        { primary: 'n', secondary: '!' },
+        { primary: 'm', secondary: '?' },
+        { primary: 'Backspace', type: 'backspace', width: 1.5 },
+      ],
+    },
+    {
+      keys: [
+        { primary: '?123', type: 'symbols', width: 1.48 },
+        { primary: '，', popup: ['，', ','] },
+        { primary: '🌐', type: 'globe', width: 1 },
+        { primary: '中文', type: 'space', width: 4.04 },
+        { primary: '。', popup: ['。', '.'] },
+        { primary: 'Enter', type: 'enter', width: 1.48 },
+      ],
+    },
+  ],
+};
+
+// Turkish QWERTY (Türkçe)
+export const TURKISH_LAYOUT: KeyboardLayoutDef = {
+  id: 'turkish_qwerty',
+  name: 'Türkçe',
+  rows: [
+    {
+      keys: [
+        { primary: 'q', secondary: '1' },
+        { primary: 'w', secondary: '2' },
+        { primary: 'e', secondary: '3' },
+        { primary: 'r', secondary: '4' },
+        { primary: 't', secondary: '5' },
+        { primary: 'y', secondary: '6' },
+        { primary: 'u', secondary: '7' },
+        { primary: 'ı', secondary: '8', popup: ['ı', 'I', 'i', 'İ'] },
+        { primary: 'o', secondary: '9', popup: ['o', 'ö'] },
+        { primary: 'p', secondary: '0' },
+        { primary: 'ğ', secondary: 'Ğ' },
+        { primary: 'ü', secondary: 'Ü' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'a', secondary: '@' },
+        { primary: 's', secondary: '#', popup: ['s', 'ş'] },
+        { primary: 'd', secondary: '$' },
+        { primary: 'f', secondary: '_' },
+        { primary: 'g', secondary: '&' },
+        { primary: 'h', secondary: '-' },
+        { primary: 'j', secondary: '+' },
+        { primary: 'k', secondary: '(' },
+        { primary: 'l', secondary: ')' },
+        { primary: 'ş', secondary: 'Ş' },
+        { primary: 'i', secondary: 'İ' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'Shift', type: 'shift', width: 1.2 },
+        { primary: 'z', secondary: '*' },
+        { primary: 'x', secondary: '"' },
+        { primary: 'c', secondary: "'", popup: ['c', 'ç'] },
+        { primary: 'v', secondary: ':' },
+        { primary: 'b', secondary: ';' },
+        { primary: 'n', secondary: '!' },
+        { primary: 'm', secondary: '?' },
+        { primary: 'ö', secondary: 'Ö' },
+        { primary: 'ç', secondary: 'Ç' },
+        { primary: 'Backspace', type: 'backspace', width: 1.2 },
+      ],
+    },
+    {
+      keys: [
+        { primary: '?123', type: 'symbols', width: 1.48 },
+        { primary: ',', popup: [',', '₺'] },
+        { primary: '🌐', type: 'globe', width: 1 },
+        { primary: 'Türkçe', type: 'space', width: 4.04 },
+        { primary: '.', popup: ['.', ',', '?', '!'] },
+        { primary: 'Enter', type: 'enter', width: 1.48 },
+      ],
+    },
+  ],
+};
+
+// Vietnamese Telex (Tiếng Việt)
+export const VIETNAMESE_LAYOUT: KeyboardLayoutDef = {
+  id: 'vietnamese_telex',
+  name: 'Tiếng Việt',
+  rows: [
+    {
+      keys: [
+        { primary: 'q', secondary: '1' },
+        { primary: 'w', secondary: '2', popup: ['w', 'ư', 'ơ'] },
+        { primary: 'e', secondary: '3', popup: ['e', 'ê', 'é', 'è', 'ẻ', 'ẽ', 'ẹ'] },
+        { primary: 'r', secondary: '4' },
+        { primary: 't', secondary: '5' },
+        { primary: 'y', secondary: '6', popup: ['y', 'ý', 'ỳ', 'ỷ', 'ỹ', 'ỵ'] },
+        { primary: 'u', secondary: '7', popup: ['u', 'ư', 'ú', 'ù', 'ủ', 'ũ', 'ụ'] },
+        { primary: 'i', secondary: '8', popup: ['i', 'í', 'ì', 'ỉ', 'ĩ', 'ị'] },
+        { primary: 'o', secondary: '9', popup: ['o', 'ô', 'ơ', 'ó', 'ò', 'ỏ', 'õ', 'ọ'] },
+        { primary: 'p', secondary: '0' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'a', secondary: '@', popup: ['a', 'ă', 'â', 'á', 'à', 'ả', 'ã', 'ạ'] },
+        { primary: 's', secondary: '#' },
+        { primary: 'd', secondary: '$', popup: ['d', 'đ'] },
+        { primary: 'f', secondary: '_' },
+        { primary: 'g', secondary: '&' },
+        { primary: 'h', secondary: '-' },
+        { primary: 'j', secondary: '+' },
+        { primary: 'k', secondary: '(' },
+        { primary: 'l', secondary: ')' },
+      ],
+    },
+    {
+      keys: [
+        { primary: 'Shift', type: 'shift', width: 1.5 },
+        { primary: 'z', secondary: '*' },
+        { primary: 'x', secondary: '"' },
+        { primary: 'c', secondary: "'" },
+        { primary: 'v', secondary: ':' },
+        { primary: 'b', secondary: ';' },
+        { primary: 'n', secondary: '!' },
+        { primary: 'm', secondary: '?' },
+        { primary: 'Backspace', type: 'backspace', width: 1.5 },
+      ],
+    },
+    {
+      keys: [
+        { primary: '?123', type: 'symbols', width: 1.48 },
+        { primary: ',', popup: [',', '₫'] },
+        { primary: '🌐', type: 'globe', width: 1 },
+        { primary: 'Tiếng Việt', type: 'space', width: 4.04 },
+        { primary: '.', popup: ['.', ',', '?', '!'] },
         { primary: 'Enter', type: 'enter', width: 1.48 },
       ],
     },
@@ -768,16 +1375,40 @@ export function getLayoutForLanguage(langId: string, layoutVariant?: string): Ke
       return BENGALI_PROBHAT_LAYOUT;
     case 'es_es':
       return SPANISH_LAYOUT;
+    case 'pt_br':
+      return PORTUGUESE_LAYOUT;
     case 'fr_fr':
       return FRENCH_LAYOUT;
     case 'de_de':
       return GERMAN_LAYOUT;
     case 'ar_sa':
+    case 'fa_ir':
       return ARABIC_LAYOUT;
+    case 'ur_pk':
+      return URDU_LAYOUT;
     case 'hi_in':
+    case 'ta_in':
+    case 'te_in':
       return HINDI_LAYOUT;
     case 'ru_ru':
       return RUSSIAN_LAYOUT;
+    case 'ko_kr':
+      return KOREAN_LAYOUT;
+    case 'ja_jp':
+      return JAPANESE_LAYOUT;
+    case 'zh_cn':
+      return CHINESE_LAYOUT;
+    case 'tr_tr':
+      return TURKISH_LAYOUT;
+    case 'vi_vn':
+      return VIETNAMESE_LAYOUT;
+    case 'it_it':
+    case 'id_id':
+    case 'th_th':
+    case 'nl_nl':
+    case 'pl_pl':
+    case 'sv_se':
+    case 'en_gb':
     case 'en_us':
     default:
       return QWERTY_LAYOUT;

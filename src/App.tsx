@@ -86,6 +86,7 @@ const DEFAULT_SETTINGS: KeyboardSettings = {
     'ar_sa',
     'hi_in',
   ],
+  uiLocale: 'en',
   incognito: false,
   customShortcuts: [
     { shortcut: 'tqb', expanded: 'Text Q Board' },
@@ -507,6 +508,7 @@ export default function App() {
             setIsSettingsModalOpen(true);
           }
         }}
+        onOpenBoardStudio={() => setIsBoardStudioOpen(true)}
         onHideKeyboard={inImeMode ? () => imeHideKeyboard() : undefined}
         theme={currentTheme}
         incognito={settings.incognito}
@@ -526,7 +528,7 @@ export default function App() {
         }}
       />
 
-      {/* 2. Expanded Tools Bar (Sound & Music Studio, Board Studio, Translate, Clipboard, Text Edit D-Pad, Themes, Smart AI) */}
+      {/* 2. Expanded Tools Bar (Languages, Sound & Music, Board Studio, Translate, Clipboard, Text Edit D-Pad, Themes, Smart AI) */}
       {!isVoiceModalOpen && (
         <ToolbarTools
           activeView={activeToolbarView}
@@ -550,6 +552,10 @@ export default function App() {
           soundVolume={settings.soundVolume}
           soundProfile={settings.soundProfile || 'gboard_soft'}
           bgMusicTrack={settings.bgMusicTrack || 'off'}
+          activeLanguage={settings.activeLanguage}
+          onLanguageChange={(langId) =>
+            handleUpdateSettings({ activeLanguage: langId })
+          }
           settings={settings}
           onOpenBoardStudio={() => setIsBoardStudioOpen(true)}
           onUpdateSettings={handleUpdateSettings}
@@ -950,24 +956,38 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Clean Segmented Language Bar */}
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-white/8">
-                {SUPPORTED_LANGUAGES.slice(0, 6).map((lang) => (
+              {/* Clean Segmented Universal World Language Bar */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1.5 border-t border-white/8">
+                <span className="text-[11px] text-[#9aa0a6] shrink-0 font-medium pl-0.5">
+                  Language:
+                </span>
+                {SUPPORTED_LANGUAGES.slice(0, 10).map((lang) => (
                   <button
                     key={lang.id}
                     type="button"
                     onClick={() =>
                       handleUpdateSettings({ activeLanguage: lang.id })
                     }
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                       settings.activeLanguage === lang.id
-                        ? 'bg-[#a8c7fa] text-[#062e6f] font-semibold'
-                        : 'bg-[#1e2430] text-[#c4c6d0] hover:bg-[#262d3d]'
+                        ? 'bg-[#a8c7fa] text-[#062e6f] font-semibold shadow-sm'
+                        : 'bg-[#1e2430] text-[#c4c6d0] hover:bg-[#262d3d] hover:text-white'
                     }`}
                   >
-                    {lang.nativeName}
+                    <span>{lang.flag}</span>
+                    <span>{lang.nativeName}</span>
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVoiceModalOpen(false);
+                    setActiveToolbarView('languages');
+                  }}
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-[#232936] text-[#a8c7fa] hover:bg-[#2c3444] flex items-center gap-1 border border-white/5"
+                >
+                  <span>🌐 All Languages...</span>
+                </button>
               </div>
             </div>
 
