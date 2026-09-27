@@ -4,6 +4,16 @@
   "webDir": "dist",
   "android": {
     "allowMixedContent": true,
-    "backgroundColor": "#0b1320"
+    "backgroundColor": "#111318"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "backgroundColor": "#111318",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_INSIDE",
+      "splashFullScreen": false,
+      "splashImmersive": false
+    }
   }
 }

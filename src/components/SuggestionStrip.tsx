@@ -11,7 +11,8 @@ import {
   Smile,
   ChevronLeft,
   ChevronDown,
-  EyeOff
+  EyeOff,
+  Music
 } from 'lucide-react';
 import { ThemeConfig, ToolbarView } from '../types/keyboard';
 
@@ -135,6 +136,19 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
             title="Translate"
           >
             <Languages className="w-[18px] h-[18px]" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveToolbarView('sound_studio')}
+            className={`p-2 rounded-full transition-colors ${
+              activeToolbarView === 'sound_studio'
+                ? theme.suggestionActiveBg
+                : `${theme.textSecondary} hover:bg-white/10`
+            }`}
+            title="Sound & Music Studio"
+          >
+            <Music className="w-[18px] h-[18px]" />
           </button>
 
           <button

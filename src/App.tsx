@@ -14,9 +14,10 @@ import { VoiceModal } from './components/VoiceModal';
 import { SettingsModal } from './components/SettingsModal';
 import { Keyboard } from './components/Keyboard';
 import { AndroidFrame, AndroidAppId } from './components/AndroidFrame';
-import { TextQBoardLogo } from './components/Logo';
+import { TextQBoardLogo, TextQBoardHeroBanner } from './components/Logo';
 import { transliterateBengali } from './utils/bengaliPhonetic';
 import { getWordPredictions } from './utils/dictionary';
+import { SOUND_PROFILES, BG_MUSIC_TRACKS, soundEngine } from './utils/audio';
 import {
   isSystemImeMode,
   getAndroidImeStatus,
@@ -42,13 +43,18 @@ import {
   Check,
   RotateCcw,
   CheckCircle2,
-  Mic
+  Mic,
+  Music,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 const DEFAULT_SETTINGS: KeyboardSettings = {
   hapticFeedback: true,
   soundOnKeypress: true,
   soundVolume: 0.5,
+  soundProfile: 'gboard_soft',
+  bgMusicTrack: 'off',
   popupOnKeypress: true,
   longPressDelay: 350,
   showNumberRow: true,
@@ -118,6 +124,11 @@ export default function App() {
       window.removeEventListener('focus', handleRefresh);
     };
   }, []);
+
+  // Synchronize Background Music Engine
+  useEffect(() => {
+    soundEngine.setBackgroundMusic(settings.bgMusicTrack, settings.soundVolume);
+  }, [settings.bgMusicTrack, settings.soundVolume]);
 
   // Current Active Theme
   const currentTheme: ThemeConfig =
@@ -474,7 +485,7 @@ export default function App() {
         }}
       />
 
-      {/* 2. Expanded Tools Bar (Translate, Clipboard, Text Edit D-Pad, Themes, Smart AI) */}
+      {/* 2. Expanded Tools Bar (Translate, Clipboard, Text Edit D-Pad, Themes, Sound & Music, Smart AI) */}
       {!isVoiceModalOpen && (
         <ToolbarTools
           activeView={activeToolbarView}
@@ -494,6 +505,11 @@ export default function App() {
           onDeleteClipboardItem={handleDeleteClipboardItem}
           onClearClipboard={handleClearClipboard}
           onSelectTheme={(themeId) => handleUpdateSettings({ theme: themeId })}
+          soundOnKeypress={settings.soundOnKeypress}
+          soundVolume={settings.soundVolume}
+          soundProfile={settings.soundProfile}
+          bgMusicTrack={settings.bgMusicTrack}
+          onUpdateSettings={handleUpdateSettings}
         />
       )}
 
@@ -652,20 +668,14 @@ export default function App() {
         <div className="flex-1 flex flex-col justify-between max-w-xl w-full mx-auto">
           {/* Top Setup & Live Typing Section */}
           <div className="p-3.5 sm:p-4 space-y-3 overflow-y-auto">
-            {/* Clean Material 3 Gboard Banner */}
-            <div className="p-4 rounded-2xl bg-[#1b1b1f] border border-white/8 space-y-3.5">
-              <div className="flex items-center justify-between gap-3">
-                <TextQBoardLogo size="sm" />
-                <button
-                  type="button"
-                  onClick={() => setIsVoiceModalOpen(true)}
-                  className="px-3 py-1.5 rounded-full bg-[#2f3036] hover:bg-[#373940] text-xs font-medium text-[#a8c7fa] flex items-center gap-1.5 transition-colors"
-                >
-                  <Mic className="w-3.5 h-3.5" />
-                  <span>Voice Typing</span>
-                </button>
-              </div>
+            {/* Unified High-Contrast Hero Banner */}
+            <TextQBoardHeroBanner
+              onOpenVoice={() => setIsVoiceModalOpen(true)}
+              onOpenSoundStudio={() => setActiveToolbarView('sound_studio')}
+            />
 
+            {/* Clean Material 3 Setup & Audio Control Card */}
+            <div className="p-4 rounded-2xl bg-[#1b1b1f] border border-white/8 space-y-3.5">
               {/* 2-Step Android System Keyboard Activation */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <button
@@ -733,6 +743,80 @@ export default function App() {
                     </span>
                   )}
                 </button>
+              </div>
+
+              {/* Quick Sound & Music Studio Bar */}
+              <div className="p-2.5 rounded-xl bg-[#232429] border border-white/5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleUpdateSettings({
+                          soundOnKeypress: !settings.soundOnKeypress,
+                        })
+                      }
+                      className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                        settings.soundOnKeypress
+                          ? 'bg-[#a8c7fa] text-[#062e6f]'
+                          : 'bg-[#2f3036] text-[#9aa0a6]'
+                      }`}
+                    >
+                      {settings.soundOnKeypress ? (
+                        <Volume2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <VolumeX className="w-3.5 h-3.5" />
+                      )}
+                      <span>
+                        {settings.soundOnKeypress ? 'Sound: ON' : 'Sound: OFF'}
+                      </span>
+                    </button>
+
+                    <span className="text-[11px] text-[#9aa0a6] hidden sm:inline">
+                      Try typing sounds & melodies:
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveToolbarView('sound_studio')}
+                    className="text-[11px] text-[#a8c7fa] hover:underline font-medium"
+                  >
+                    All Sounds →
+                  </button>
+                </div>
+
+                {/* Quick Sound Profiles Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                  {SOUND_PROFILES.slice(0, 6).map((p) => {
+                    const isSelected =
+                      settings.soundProfile === p.id && settings.soundOnKeypress;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          handleUpdateSettings({
+                            soundProfile: p.id,
+                            soundOnKeypress: true,
+                          });
+                          soundEngine.playKeyClick(
+                            'standard',
+                            settings.soundVolume,
+                            p.id
+                          );
+                        }}
+                        className={`px-2 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-colors ${
+                          isSelected
+                            ? 'bg-[#a8c7fa] text-[#062e6f] font-semibold shadow-sm'
+                            : 'bg-[#2f3036] text-[#c4c6d0] hover:bg-[#373940]'
+                        }`}
+                      >
+                        {p.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Clean Segmented Language Bar */}

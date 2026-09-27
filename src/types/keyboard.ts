@@ -63,6 +63,23 @@ export type ThemeId =
   | 'sunset_violet'
   | 'crimson_dark';
 
+export type SoundProfileId =
+  | 'gboard_soft'
+  | 'mechanical'
+  | 'typewriter'
+  | 'bubble_pop'
+  | 'piano_melody'
+  | 'bangla_folk'
+  | 'guitar_strums'
+  | 'synth_arp';
+
+export type BgMusicTrackId =
+  | 'off'
+  | 'lofi_chill'
+  | 'calm_piano'
+  | 'bangla_flute'
+  | 'cyber_synth';
+
 export interface ThemeConfig {
   id: ThemeId;
   name: string;
@@ -89,6 +106,8 @@ export interface KeyboardSettings {
   hapticFeedback: boolean;
   soundOnKeypress: boolean;
   soundVolume: number;
+  soundProfile: SoundProfileId;
+  bgMusicTrack: BgMusicTrackId;
   popupOnKeypress: boolean;
   longPressDelay: number;
   showNumberRow: boolean;
@@ -138,6 +157,7 @@ export interface EmojiKitchenPair {
 export type ToolbarView = 
   | 'normal'
   | 'more_tools'
+  | 'sound_studio'
   | 'translate'
   | 'clipboard'
   | 'text_edit'

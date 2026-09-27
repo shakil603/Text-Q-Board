@@ -169,17 +169,17 @@ export const Keyboard: React.FC<KeyboardProps> = ({
 
     // Custom actionIds for symbol switching
     if (key.actionId === 'switch_symbols_2') {
-      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
       setSymbolsMode('sym2');
       return;
     }
     if (key.actionId === 'switch_symbols_1') {
-      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
       setSymbolsMode('sym1');
       return;
     }
     if (key.actionId === 'switch_letters') {
-      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+      soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
       setSymbolsMode('none');
       return;
     }
@@ -188,7 +188,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
 
     switch (type) {
       case 'shift': {
-        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
         const now = Date.now();
         if (now - lastShiftTapRef.current < 300) {
           setIsCapsLock(true);
@@ -208,7 +208,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
         break;
 
       case 'enter':
-        soundEngine.playKeyClick('enter', settings.soundOnKeypress ? settings.soundVolume : 0);
+        soundEngine.playKeyClick('enter', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
         onEnter();
         break;
 
@@ -217,7 +217,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
           didMoveSpaceCursorRef.current = false;
           return;
         }
-        soundEngine.playKeyClick('space', settings.soundOnKeypress ? settings.soundVolume : 0);
+        soundEngine.playKeyClick('space', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
         const now = Date.now();
         if (settings.doubleSpacePeriod && now - lastSpaceTapRef.current < 280) {
           onDeleteText(1);
@@ -236,23 +236,23 @@ export const Keyboard: React.FC<KeyboardProps> = ({
       }
 
       case 'symbols':
-        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
         setSymbolsMode((prev) => (prev === 'none' ? 'sym1' : 'none'));
         break;
 
       case 'globe':
-        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
         handleCycleLanguage();
         break;
 
       case 'emoji':
-        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0);
+        soundEngine.playKeyClick('special', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
         onOpenEmojiPanel();
         break;
 
       case 'char':
       default: {
-        soundEngine.playKeyClick('standard', settings.soundOnKeypress ? settings.soundVolume : 0);
+        soundEngine.playKeyClick('standard', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
         let charToInsert = key.primary;
 
         if (isShifted || isCapsLock) {
@@ -303,7 +303,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
 
     // Immediate delete + continuous repeat when holding Backspace
     if (type === 'backspace') {
-      soundEngine.playKeyClick('backspace', settings.soundOnKeypress ? settings.soundVolume : 0);
+      soundEngine.playKeyClick('backspace', settings.soundOnKeypress ? settings.soundVolume : 0, settings.soundProfile);
       if (settings.hapticFeedback) soundEngine.triggerHaptic(10);
       onDeleteText(1);
 

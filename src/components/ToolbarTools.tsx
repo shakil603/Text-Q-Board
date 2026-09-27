@@ -14,10 +14,24 @@ import {
   RotateCcw,
   Check,
   Languages,
-  CheckCheck
+  CheckCheck,
+  Volume2,
+  VolumeX,
+  Music,
+  Disc,
+  Play
 } from 'lucide-react';
-import { ThemeConfig, ThemeId, ToolbarView, ClipboardItem } from '../types/keyboard';
+import {
+  ThemeConfig,
+  ThemeId,
+  ToolbarView,
+  ClipboardItem,
+  SoundProfileId,
+  BgMusicTrackId,
+  KeyboardSettings
+} from '../types/keyboard';
 import { KEYBOARD_THEMES } from '../data/themes';
+import { SOUND_PROFILES, BG_MUSIC_TRACKS, soundEngine } from '../utils/audio';
 
 interface ToolbarToolsProps {
   activeView: ToolbarView;
@@ -37,6 +51,11 @@ interface ToolbarToolsProps {
   onDeleteClipboardItem: (id: string) => void;
   onClearClipboard: () => void;
   onSelectTheme: (themeId: ThemeId) => void;
+  soundOnKeypress?: boolean;
+  soundVolume?: number;
+  soundProfile?: SoundProfileId;
+  bgMusicTrack?: BgMusicTrackId;
+  onUpdateSettings?: (newSettings: Partial<KeyboardSettings>) => void;
 }
 
 const TRANSLATION_LANGUAGES = [
@@ -68,6 +87,11 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
   onDeleteClipboardItem,
   onClearClipboard,
   onSelectTheme,
+  soundOnKeypress = true,
+  soundVolume = 0.5,
+  soundProfile = 'gboard_soft',
+  bgMusicTrack = 'off',
+  onUpdateSettings,
 }) => {
   // Translate states
   const [sourceLang, setSourceLang] = useState('en');
@@ -102,7 +126,6 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
 
     setIsTranslating(true);
     const timer = setTimeout(() => {
-      // Simulate real-time translation
       const lower = transInput.trim().toLowerCase();
       let translated = '';
 
@@ -138,7 +161,7 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
 
       setTransOutput(translated);
       setIsTranslating(false);
-    }, 250);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [transInput, sourceLang, targetLang]);
@@ -184,7 +207,7 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
       }
       setAiOptions(options);
       setAiGenerating(false);
-    }, 400);
+    }, 350);
   };
 
   if (activeView === 'normal' || activeView === 'more_tools') return null;
@@ -197,121 +220,252 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
       <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/5">
         <button
           onClick={onClose}
-          className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-semibold px-1 py-0.5 rounded active:scale-95"
+          className="flex items-center gap-1 text-[#a8c7fa] hover:text-[#d3e3fd] font-semibold px-1 py-0.5 rounded active:scale-95 transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back</span>
+          <span>← Back</span>
         </button>
-        <span className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">
-          {activeView === 'translate' && 'Google Translate Bar'}
-          {activeView === 'clipboard' && 'Clipboard Manager'}
-          {activeView === 'text_edit' && 'Text Editing Tool'}
-          {activeView === 'themes' && 'Select Theme'}
-          {activeView === 'smart_ai' && 'Smart AI Assistant & Tone'}
+
+        <span className="font-semibold text-[#e3e2e6] tracking-wide uppercase text-[11px]">
+          {activeView === 'sound_studio' && '🎵 Sound & Music Studio'}
+          {activeView === 'translate' && '🌐 Real-Time Translator'}
+          {activeView === 'clipboard' && '📋 Smart Clipboard'}
+          {activeView === 'text_edit' && '✍️ Precise Text Cursor Control'}
+          {activeView === 'themes' && '🎨 Keyboard Themes'}
+          {activeView === 'smart_ai' && '✨ Text Q Smart Assistant'}
         </span>
-        <div className="w-12" />
+
+        <button
+          onClick={onClose}
+          className="text-[#9aa0a6] hover:text-white px-1.5 py-0.5 rounded text-xs"
+        >
+          ✕
+        </button>
       </div>
 
-      {/* 1. TRANSLATE TOOL */}
+      {/* 0. SOUND & MUSIC STUDIO */}
+      {activeView === 'sound_studio' && (
+        <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+          {/* Sound On / Off Toggle + Master Volume */}
+          <div className="p-2.5 rounded-xl bg-[#232429] border border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (onUpdateSettings) {
+                    onUpdateSettings({ soundOnKeypress: !soundOnKeypress });
+                  }
+                }}
+                className={`p-2 rounded-lg flex items-center gap-1.5 font-semibold text-xs transition-colors ${
+                  soundOnKeypress
+                    ? 'bg-[#a8c7fa] text-[#062e6f]'
+                    : 'bg-[#2f3036] text-[#9aa0a6]'
+                }`}
+              >
+                {soundOnKeypress ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                <span>{soundOnKeypress ? 'Typing Sound: ON' : 'Typing Sound: OFF'}</span>
+              </button>
+            </div>
+
+            {/* Volume Slider */}
+            {soundOnKeypress && (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-[#9aa0a6]">Vol:</span>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.1"
+                  value={soundVolume}
+                  onChange={(e) => {
+                    if (onUpdateSettings) {
+                      onUpdateSettings({ soundVolume: parseFloat(e.target.value) });
+                    }
+                  }}
+                  className="w-20 accent-[#a8c7fa] cursor-pointer"
+                />
+                <span className="text-[11px] text-[#a8c7fa] font-bold w-7 text-right">
+                  {Math.round(soundVolume * 100)}%
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Typing Sound Profiles */}
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold text-[#c4c6d0]">Keyboard Sound Effects</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {SOUND_PROFILES.map((p) => {
+                const isSelected = soundProfile === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      if (onUpdateSettings) {
+                        onUpdateSettings({ soundProfile: p.id, soundOnKeypress: true });
+                      }
+                      soundEngine.playKeyClick('standard', soundVolume, p.id);
+                    }}
+                    className={`p-2 rounded-lg border text-left flex flex-col justify-between transition-colors ${
+                      isSelected
+                        ? 'bg-[#1e2a38] border-[#a8c7fa] text-white ring-1 ring-[#a8c7fa]'
+                        : 'bg-[#232429] border-white/5 text-[#c4c6d0] hover:bg-[#2f3036]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-[11px] truncate">{p.name}</span>
+                      {isSelected && <Check className="w-3 h-3 text-[#a8c7fa] shrink-0" />}
+                    </div>
+                    <span className="text-[9px] text-[#9aa0a6] truncate mt-0.5">
+                      {p.subtitle}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Background Music Loops */}
+          <div className="space-y-1 pt-1 border-t border-white/5">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold text-[#c4c6d0] flex items-center gap-1.5">
+                <Music className="w-3.5 h-3.5 text-[#a8c7fa]" />
+                <span>Ambient Background Music</span>
+              </p>
+              {bgMusicTrack !== 'off' && (
+                <span className="text-[10px] text-[#a8c7fa] animate-pulse">Playing</span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+              {BG_MUSIC_TRACKS.map((track) => {
+                const isSelected = bgMusicTrack === track.id;
+                return (
+                  <button
+                    key={track.id}
+                    type="button"
+                    onClick={() => {
+                      if (onUpdateSettings) {
+                        onUpdateSettings({ bgMusicTrack: track.id });
+                      }
+                      soundEngine.setBackgroundMusic(track.id, soundVolume);
+                    }}
+                    className={`p-1.5 rounded-lg border text-left flex flex-col transition-colors ${
+                      isSelected
+                        ? 'bg-[#1e2a38] border-[#a8c7fa] text-white ring-1 ring-[#a8c7fa]'
+                        : 'bg-[#232429] border-white/5 text-[#c4c6d0] hover:bg-[#2f3036]'
+                    }`}
+                  >
+                    <span className="font-semibold text-[11px] truncate">{track.name}</span>
+                    <span className="text-[9px] text-[#9aa0a6] truncate">{track.subtitle}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 1. TRANSLATE */}
       {activeView === 'translate' && (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
             <select
               value={sourceLang}
               onChange={(e) => setSourceLang(e.target.value)}
-              className="bg-slate-800 text-cyan-200 rounded px-2 py-1 border border-cyan-500/30 text-xs flex-1 outline-none"
+              className="bg-[#232429] text-white rounded px-2 py-1 border border-white/10 outline-none flex-1 text-xs"
             >
               {TRANSLATION_LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code}>
+                <option key={`src-${l.code}`} value={l.code}>
                   {l.name}
                 </option>
               ))}
             </select>
-            <button
-              onClick={() => {
-                const s = sourceLang;
-                setSourceLang(targetLang);
-                setTargetLang(s);
-              }}
-              className="p-1 rounded bg-white/10 hover:bg-white/20 active:scale-90 text-cyan-300"
-              title="Swap Languages"
-            >
-              <Languages className="w-4 h-4" />
-            </button>
+            <span className="text-[#a8c7fa] font-bold">⇄</span>
             <select
               value={targetLang}
               onChange={(e) => setTargetLang(e.target.value)}
-              className="bg-slate-800 text-cyan-200 rounded px-2 py-1 border border-cyan-500/30 text-xs flex-1 outline-none"
+              className="bg-[#232429] text-white rounded px-2 py-1 border border-white/10 outline-none flex-1 text-xs"
             >
               {TRANSLATION_LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code}>
+                <option key={`tgt-${l.code}`} value={l.code}>
                   {l.name}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             <input
               type="text"
               value={transInput}
               onChange={(e) => setTransInput(e.target.value)}
-              placeholder="Type or paste to translate..."
-              className="flex-1 bg-slate-900 border border-white/10 rounded px-2.5 py-1 text-slate-100 placeholder-slate-500 outline-none focus:border-cyan-400"
+              placeholder="Type or paste text to translate..."
+              className="flex-1 bg-[#1a1c22] text-white px-2.5 py-1.5 rounded border border-white/10 focus:border-[#a8c7fa] outline-none text-xs"
             />
+            {transInput && (
+              <button
+                onClick={() => setTransInput('')}
+                className="px-2 py-1 bg-[#2f3036] text-[#c4c6d0] rounded hover:text-white"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           {transOutput && (
-            <div className="p-2 rounded bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-between">
-              <span className="text-cyan-100 font-medium">{transOutput}</span>
+            <div className="p-2 rounded bg-[#232429] border border-white/10 flex items-center justify-between gap-2">
+              <span className="text-white font-medium text-xs flex-1 truncate">
+                {transOutput}
+              </span>
               <button
                 onClick={() => {
-                  onInsertText(transOutput);
+                  onReplaceAllText(transOutput);
                   onClose();
                 }}
-                className="px-2 py-1 bg-cyan-500 text-slate-950 font-bold rounded flex items-center gap-1 active:scale-95 shadow-sm"
+                className="px-2.5 py-1 bg-[#a8c7fa] text-[#062e6f] font-bold rounded hover:bg-[#b8d2fc] shrink-0"
               >
-                <Check className="w-3.5 h-3.5" />
-                <span>Insert</span>
+                Insert
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* 2. CLIPBOARD MANAGER */}
+      {/* 2. CLIPBOARD */}
       {activeView === 'clipboard' && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-slate-400">
-              Tap any clip to paste. Pin to keep indefinitely.
+            <span className="text-[11px] text-[#9aa0a6]">
+              {clipboardItems.length} items saved
             </span>
-            <div className="flex items-center gap-1">
+            <div className="flex gap-1.5">
               <button
                 onClick={() => setShowAddClip(!showAddClip)}
-                className="p-1 rounded bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30"
-                title="Add custom clip"
+                className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#2f3036] text-[#a8c7fa] hover:bg-[#373940]"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3 h-3" />
+                <span>Add snippet</span>
               </button>
-              <button
-                onClick={onClearClipboard}
-                className="p-1 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30"
-                title="Clear unpinned clips"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {clipboardItems.length > 0 && (
+                <button
+                  onClick={onClearClipboard}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#2f3036] text-rose-300 hover:bg-rose-950/40"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Clear</span>
+                </button>
+              )}
             </div>
           </div>
 
           {showAddClip && (
-            <div className="flex gap-1">
+            <div className="flex gap-1.5">
               <input
                 type="text"
                 value={newClipText}
                 onChange={(e) => setNewClipText(e.target.value)}
-                placeholder="Enter text to save in clipboard..."
-                className="flex-1 bg-slate-900 border border-cyan-500/40 rounded px-2 py-1 text-white text-xs outline-none"
+                placeholder="Type new snippet to save..."
+                className="flex-1 bg-[#1a1c22] text-white px-2 py-1 rounded border border-white/10 outline-none text-xs"
               />
               <button
                 onClick={() => {
@@ -321,52 +475,40 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
                     setShowAddClip(false);
                   }
                 }}
-                className="px-2 py-1 bg-cyan-500 text-slate-950 font-bold rounded"
+                className="px-2.5 py-1 bg-[#a8c7fa] text-[#062e6f] font-bold rounded hover:bg-[#b8d2fc]"
               >
                 Save
               </button>
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             {clipboardItems.map((item) => (
               <div
                 key={item.id}
-                className={`group relative p-2 rounded-lg border text-left cursor-pointer transition-all active:scale-95 ${
-                  item.pinned
-                    ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-100'
-                    : 'bg-slate-800/80 border-slate-700/60 text-slate-200 hover:border-cyan-500/30'
-                }`}
+                className="flex-shrink-0 max-w-[200px] p-2 rounded-lg bg-[#232429] border border-white/10 flex flex-col justify-between gap-1.5"
               >
                 <p
                   onClick={() => {
                     onInsertText(item.text);
                     onClose();
                   }}
-                  className="line-clamp-2 text-[11px] font-medium"
+                  className="text-white text-xs line-clamp-2 cursor-pointer hover:text-[#a8c7fa]"
                 >
                   {item.text}
                 </p>
-                <div className="flex items-center justify-end gap-1 mt-1 pt-1 border-t border-white/5">
+                <div className="flex items-center justify-between pt-1 border-t border-white/5">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTogglePinClipboard(item.id);
-                    }}
-                    className={`p-0.5 rounded ${
-                      item.pinned ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'
+                    onClick={() => onTogglePinClipboard(item.id)}
+                    className={`p-1 rounded ${
+                      item.pinned ? 'text-[#a8c7fa]' : 'text-[#9aa0a6] hover:text-white'
                     }`}
-                    title={item.pinned ? 'Unpin' : 'Pin clip'}
                   >
                     <Pin className="w-3 h-3" />
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteClipboardItem(item.id);
-                    }}
-                    className="p-0.5 rounded text-slate-500 hover:text-red-400"
-                    title="Delete clip"
+                    onClick={() => onDeleteClipboardItem(item.id)}
+                    className="p-1 text-[#9aa0a6] hover:text-rose-400"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -377,93 +519,80 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </div>
       )}
 
-      {/* 3. TEXT EDITING D-PAD TOOL */}
+      {/* 3. TEXT EDITING CURSOR CONTROL */}
       {activeView === 'text_edit' && (
-        <div className="flex flex-col items-center gap-2 py-1">
-          {/* Action Row */}
-          <div className="flex items-center justify-center gap-1.5 w-full">
-            <button
-              onClick={() => setIsSelectMode(!isSelectMode)}
-              className={`px-3 py-1 rounded font-semibold transition-all ${
-                isSelectMode
-                  ? 'bg-cyan-500 text-slate-950 shadow-[0_0_10px_rgba(6,182,212,0.5)]'
-                  : 'bg-slate-800 text-cyan-200 hover:bg-slate-700'
-              }`}
-            >
-              {isSelectMode ? 'Selecting...' : 'Select'}
-            </button>
-            <button
-              onClick={onSelectAll}
-              className="px-2.5 py-1 rounded bg-slate-800 text-slate-200 hover:bg-slate-700 flex items-center gap-1"
-            >
-              <CheckCheck className="w-3 h-3 text-cyan-400" />
-              <span>All</span>
-            </button>
-            <button
-              onClick={onCutSelection}
-              className="px-2 py-1 rounded bg-slate-800 text-slate-200 hover:bg-slate-700"
-              title="Cut"
-            >
-              <Scissors className="w-3.5 h-3.5 text-cyan-300" />
-            </button>
-            <button
-              onClick={onCopySelection}
-              className="px-2 py-1 rounded bg-slate-800 text-slate-200 hover:bg-slate-700"
-              title="Copy"
-            >
-              <Copy className="w-3.5 h-3.5 text-cyan-300" />
-            </button>
-            <button
-              onClick={onDeleteSelection}
-              className="px-2 py-1 rounded bg-slate-800 text-red-300 hover:bg-slate-700"
-              title="Delete selection"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* D-Pad Arrows Grid */}
-          <div className="grid grid-cols-3 gap-1.5 w-48">
-            <div className="flex justify-center">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex gap-1">
               <button
-                onClick={() => onMoveCursor('start')}
-                className="w-12 h-8 rounded bg-slate-800 text-slate-300 hover:bg-cyan-900/50 hover:text-cyan-200 font-bold active:scale-95"
+                onClick={onSelectAll}
+                className="px-2 py-1 rounded bg-[#2f3036] text-white hover:bg-[#373940]"
               >
-                |◀
+                Select All
+              </button>
+              <button
+                onClick={onCopySelection}
+                className="px-2 py-1 rounded bg-[#2f3036] text-white hover:bg-[#373940] flex items-center gap-1"
+              >
+                <Copy className="w-3 h-3" /> Copy
+              </button>
+              <button
+                onClick={onCutSelection}
+                className="px-2 py-1 rounded bg-[#2f3036] text-white hover:bg-[#373940] flex items-center gap-1"
+              >
+                <Scissors className="w-3 h-3" /> Cut
+              </button>
+              <button
+                onClick={onDeleteSelection}
+                className="px-2 py-1 rounded bg-rose-950/40 text-rose-300 hover:bg-rose-900/60"
+              >
+                Delete
               </button>
             </div>
+            <div className="flex gap-1">
+              <button
+                onClick={() => onMoveCursor('start')}
+                className="px-2 py-1 rounded bg-[#2f3036] text-[#a8c7fa] hover:bg-[#373940]"
+              >
+                ⇤ Start
+              </button>
+              <button
+                onClick={() => onMoveCursor('end')}
+                className="px-2 py-1 rounded bg-[#2f3036] text-[#a8c7fa] hover:bg-[#373940]"
+              >
+                End ⇥
+              </button>
+            </div>
+          </div>
+
+          {/* D-Pad Arrows */}
+          <div className="grid grid-cols-3 gap-1 max-w-[180px] mx-auto pt-1">
+            <div />
             <div className="flex justify-center">
               <button
                 onClick={() => onMoveCursor('up')}
-                className="w-12 h-8 rounded bg-slate-800 text-slate-200 hover:bg-cyan-900/50 hover:text-cyan-200 flex items-center justify-center active:scale-95"
+                className="w-12 h-8 rounded bg-[#2f3036] text-white hover:bg-[#373940] flex items-center justify-center active:scale-95"
               >
                 <ArrowUp className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex justify-center">
-              <button
-                onClick={() => onMoveCursor('end')}
-                className="w-12 h-8 rounded bg-slate-800 text-slate-300 hover:bg-cyan-900/50 hover:text-cyan-200 font-bold active:scale-95"
-              >
-                ▶|
-              </button>
-            </div>
+            <div />
 
             <div className="flex justify-center">
               <button
                 onClick={() => onMoveCursor('left')}
-                className="w-12 h-8 rounded bg-slate-800 text-slate-200 hover:bg-cyan-900/50 hover:text-cyan-200 flex items-center justify-center active:scale-95"
+                className="w-12 h-8 rounded bg-[#2f3036] text-white hover:bg-[#373940] flex items-center justify-center active:scale-95"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             </div>
             <div className="flex justify-center items-center">
-              <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#a8c7fa]" />
             </div>
             <div className="flex justify-center">
               <button
                 onClick={() => onMoveCursor('right')}
-                className="w-12 h-8 rounded bg-slate-800 text-slate-200 hover:bg-cyan-900/50 hover:text-cyan-200 flex items-center justify-center active:scale-95"
+                className="w-12 h-8 rounded bg-[#2f3036] text-white hover:bg-[#373940] flex items-center justify-center active:scale-95"
               >
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -473,7 +602,7 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
             <div className="flex justify-center">
               <button
                 onClick={() => onMoveCursor('down')}
-                className="w-12 h-8 rounded bg-slate-800 text-slate-200 hover:bg-cyan-900/50 hover:text-cyan-200 flex items-center justify-center active:scale-95"
+                className="w-12 h-8 rounded bg-[#2f3036] text-white hover:bg-[#373940] flex items-center justify-center active:scale-95"
               >
                 <ArrowDown className="w-4 h-4" />
               </button>
@@ -493,15 +622,15 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
                 onSelectTheme(t.id);
                 onClose();
               }}
-              className={`p-2 rounded-lg border text-left flex flex-col gap-1 transition-all active:scale-95 ${
+              className={`p-2 rounded-xl border text-left flex flex-col gap-1 transition-all active:scale-95 ${
                 theme.id === t.id
-                  ? 'border-cyan-400 ring-2 ring-cyan-500/40 shadow-lg'
+                  ? 'border-[#a8c7fa] ring-2 ring-[#a8c7fa]/40 shadow-lg'
                   : 'border-white/10 hover:border-white/30'
               } ${t.boardBg}`}
             >
               <div className="flex items-center justify-between">
                 <span className={`text-[11px] font-bold ${t.textPrimary}`}>{t.name}</span>
-                {theme.id === t.id && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                {theme.id === t.id && <Check className="w-3.5 h-3.5 text-[#a8c7fa]" />}
               </div>
               <div className="flex gap-1">
                 <div className={`w-3.5 h-3.5 rounded ${t.keyBg} ${t.keyBorder}`} />
@@ -513,45 +642,45 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
         </div>
       )}
 
-      {/* 5. SMART AI ASSISTANT & TONE REWRITE */}
+      {/* 5. SMART AI ASSISTANT */}
       {activeView === 'smart_ai' && (
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
             <button
               onClick={() => handleAiRephrase('polite')}
-              className="px-2.5 py-1 rounded-full bg-slate-800 text-cyan-200 hover:bg-cyan-950 border border-cyan-500/30 whitespace-nowrap active:scale-95"
+              className="px-2.5 py-1 rounded-full bg-[#232429] text-[#c4c6d0] hover:bg-[#2f3036] border border-white/5 whitespace-nowrap active:scale-95"
             >
               👔 Polite
             </button>
             <button
               onClick={() => handleAiRephrase('casual')}
-              className="px-2.5 py-1 rounded-full bg-slate-800 text-cyan-200 hover:bg-cyan-950 border border-cyan-500/30 whitespace-nowrap active:scale-95"
+              className="px-2.5 py-1 rounded-full bg-[#232429] text-[#c4c6d0] hover:bg-[#2f3036] border border-white/5 whitespace-nowrap active:scale-95"
             >
               😎 Casual
             </button>
             <button
               onClick={() => handleAiRephrase('bengali')}
-              className="px-2.5 py-1 rounded-full bg-slate-800 text-cyan-200 hover:bg-cyan-950 border border-cyan-500/30 whitespace-nowrap active:scale-95"
+              className="px-2.5 py-1 rounded-full bg-[#232429] text-[#c4c6d0] hover:bg-[#2f3036] border border-white/5 whitespace-nowrap active:scale-95"
             >
               🇧🇩 বাংলা
             </button>
             <button
               onClick={() => handleAiRephrase('concise')}
-              className="px-2.5 py-1 rounded-full bg-slate-800 text-cyan-200 hover:bg-cyan-950 border border-cyan-500/30 whitespace-nowrap active:scale-95"
+              className="px-2.5 py-1 rounded-full bg-[#232429] text-[#c4c6d0] hover:bg-[#2f3036] border border-white/5 whitespace-nowrap active:scale-95"
             >
               ⚡ Concise
             </button>
             <button
               onClick={() => handleAiRephrase('expanded')}
-              className="px-2.5 py-1 rounded-full bg-slate-800 text-cyan-200 hover:bg-cyan-950 border border-cyan-500/30 whitespace-nowrap active:scale-95"
+              className="px-2.5 py-1 rounded-full bg-[#232429] text-[#c4c6d0] hover:bg-[#2f3036] border border-white/5 whitespace-nowrap active:scale-95"
             >
               📝 Elaborate
             </button>
           </div>
 
           {aiGenerating && (
-            <div className="flex items-center justify-center py-3 text-cyan-300 gap-2">
-              <Sparkles className="w-4 h-4 animate-spin text-cyan-400" />
+            <div className="flex items-center justify-center py-3 text-[#a8c7fa] gap-2">
+              <Sparkles className="w-4 h-4 animate-spin text-[#a8c7fa]" />
               <span>Text Q AI is composing suggestions...</span>
             </div>
           )}
@@ -561,15 +690,15 @@ export const ToolbarTools: React.FC<ToolbarToolsProps> = ({
               {aiOptions.map((opt, i) => (
                 <div
                   key={i}
-                  className="p-2 rounded bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between gap-2"
+                  className="p-2 rounded bg-[#232429] border border-white/10 flex items-center justify-between gap-2"
                 >
-                  <p className="text-cyan-100 text-xs flex-1">{opt}</p>
+                  <p className="text-[#e3e2e6] text-xs flex-1">{opt}</p>
                   <button
                     onClick={() => {
                       onReplaceAllText(opt);
                       onClose();
                     }}
-                    className="px-2 py-1 bg-cyan-500 text-slate-950 font-bold rounded shrink-0 active:scale-95"
+                    className="px-2 py-1 bg-[#a8c7fa] text-[#062e6f] font-bold rounded shrink-0 active:scale-95"
                   >
                     Apply
                   </button>
