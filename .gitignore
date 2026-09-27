@@ -1,6 +1,8 @@
 node_modules/
 build/
 dist/
+android/
+build-output/
 coverage/
 .DS_Store
 *.log
