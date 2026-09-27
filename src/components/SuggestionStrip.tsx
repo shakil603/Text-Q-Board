@@ -9,8 +9,9 @@ import {
   Move, 
   Smartphone, 
   Wand2, 
-  Search, 
+  Smile, 
   ChevronLeft,
+  ChevronDown,
   EyeOff
 } from 'lucide-react';
 import { ThemeConfig, ToolbarView } from '../types/keyboard';
@@ -21,6 +22,8 @@ interface SuggestionStripProps {
   activeToolbarView: ToolbarView;
   setActiveToolbarView: (view: ToolbarView) => void;
   onStartVoiceTyping: () => void;
+  onOpenSettings?: () => void;
+  onHideKeyboard?: () => void;
   theme: ThemeConfig;
   incognito?: boolean;
   isTranslating?: boolean;
@@ -36,9 +39,10 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
   activeToolbarView,
   setActiveToolbarView,
   onStartVoiceTyping,
+  onOpenSettings,
+  onHideKeyboard,
   theme,
   incognito = false,
-  onToggleFloating,
   onToggleOneHanded,
 }) => {
   const isMenuOpen = activeToolbarView === 'more_tools';
@@ -72,6 +76,13 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
       {isMenuOpen ? (
         // Expanded Toolbar Action Icons (Gboard style)
         <div className="flex-1 flex items-center justify-around gap-1 overflow-x-auto no-scrollbar px-1">
+          <button
+            onClick={() => setActiveToolbarView('emoji_picker')}
+            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
+            title="Emoji & Stickers"
+          >
+            <Smile className="w-4 h-4" />
+          </button>
           <button
             onClick={() => setActiveToolbarView('translate')}
             className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
@@ -110,15 +121,6 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
             <Smartphone className="w-4 h-4" />
           </button>
           <button
-            onClick={() => {
-              if (onToggleFloating) onToggleFloating();
-            }}
-            className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
-            title="Floating Keyboard"
-          >
-            <Search className="w-4 h-4" />
-          </button>
-          <button
             onClick={() => setActiveToolbarView('smart_ai')}
             className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-300"
             title="Smart Compose & AI Rewrite"
@@ -126,7 +128,13 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
             <Wand2 className="w-4 h-4" />
           </button>
           <button
-            onClick={() => setActiveToolbarView('settings')}
+            onClick={() => {
+              if (onOpenSettings) {
+                onOpenSettings();
+              } else {
+                setActiveToolbarView('themes');
+              }
+            }}
             className="flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-white/10 active:scale-90 text-cyan-200"
             title="Settings"
           >
@@ -137,23 +145,26 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
         // Word Suggestions List
         <div className="flex-1 flex items-center justify-around overflow-hidden px-1">
           {suggestions.length > 0 ? (
-            suggestions.slice(0, 3).map((word, idx) => (
-              <button
-                key={`${word}-${idx}`}
-                onClick={() => onSelectSuggestion(word)}
-                className={`flex-1 mx-1 px-2 py-1.5 text-center text-sm font-medium rounded-md truncate transition-all active:scale-95 ${
-                  idx === 1
-                    ? `${theme.suggestionActiveBg} font-semibold`
-                    : `${theme.textPrimary} hover:bg-white/10`
-                }`}
-              >
-                {word}
-              </button>
-            ))
+            suggestions.slice(0, 3).map((word, idx) => {
+              const isPrimary = idx === 0;
+              return (
+                <button
+                  key={`${word}-${idx}`}
+                  onClick={() => onSelectSuggestion(word)}
+                  className={`flex-1 mx-1 px-2 py-1.5 text-center text-sm font-medium rounded-md truncate transition-all active:scale-95 ${
+                    isPrimary
+                      ? `${theme.suggestionActiveBg} font-semibold`
+                      : `${theme.textPrimary} hover:bg-white/10`
+                  }`}
+                >
+                  {word}
+                </button>
+              );
+            })
           ) : (
             <div className="flex items-center gap-2 text-xs text-slate-400/80">
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-              <span>Text Q Board Engine Ready</span>
+              <span>Text Q Board Ready</span>
             </div>
           )}
         </div>
@@ -167,6 +178,17 @@ export const SuggestionStrip: React.FC<SuggestionStripProps> = ({
       >
         <Mic className="w-4 h-4" />
       </button>
+
+      {/* Hide Keyboard Button (shown when onHideKeyboard is provided) */}
+      {onHideKeyboard && (
+        <button
+          onClick={onHideKeyboard}
+          className="w-8 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-cyan-300 hover:bg-white/5 active:scale-90 transition-transform"
+          title="Hide Keyboard"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 };

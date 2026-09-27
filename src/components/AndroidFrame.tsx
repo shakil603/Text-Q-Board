@@ -20,6 +20,7 @@ import {
   Download
 } from 'lucide-react';
 import { TextQBoardLogo } from './Logo';
+import { openAndroidInputMethodSettings, showAndroidInputMethodPicker } from '../utils/androidBridge';
 
 export type AndroidAppId = 'chat' | 'notes' | 'search' | 'speed_test' | 'translate_studio' | 'setup_guide';
 
@@ -306,6 +307,7 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
                 <input
                   ref={inputRef as React.RefObject<HTMLInputElement>}
                   type="text"
+                  inputMode="none"
                   value={inputText}
                   onChange={(e) => {
                     onInputChange(e.target.value);
@@ -394,6 +396,7 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
               <input
                 ref={inputRef as React.RefObject<HTMLInputElement>}
                 type="text"
+                inputMode="none"
                 value={inputText}
                 onChange={(e) => {
                   onInputChange(e.target.value);
@@ -463,6 +466,7 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
             <div className="flex-1">
               <textarea
                 ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                inputMode="none"
                 value={inputText}
                 onChange={(e) => {
                   onInputChange(e.target.value);
@@ -529,34 +533,40 @@ export const AndroidFrame: React.FC<AndroidFrameProps> = ({
             </div>
 
             <div className="space-y-2 mt-2">
-              <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-cyan-500 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
-                  1
+              <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-between gap-2.5">
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-5 h-5 rounded-full bg-cyan-500 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Enable Text Q Board in Settings</p>
+                    <p className="text-[11px] text-slate-400">Open Android On-Screen Keyboard settings and turn on <b>Text Q Board</b>.</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-white">Go to Android Settings</p>
-                  <p className="text-[11px] text-slate-400">Open <b>Settings → System → Languages & Input → On-Screen Keyboard</b>.</p>
-                </div>
+                <button
+                  onClick={() => openAndroidInputMethodSettings()}
+                  className="px-2.5 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold text-[11px] shrink-0 active:scale-95"
+                >
+                  Enable
+                </button>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-cyan-500 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
-                  2
+              <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-between gap-2.5">
+                <div className="flex gap-2.5 items-start">
+                  <div className="w-5 h-5 rounded-full bg-cyan-500 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
+                    2
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Select Default Input Method</p>
+                    <p className="text-[11px] text-slate-400">Choose <b>Text Q Board</b> in the input method picker dialog.</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-white">Enable Text Q Board</p>
-                  <p className="text-[11px] text-slate-400">Toggle the switch next to <b>Text Q Board</b> to enable keyboard permissions.</p>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-900 border border-white/5 flex gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-cyan-500 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
-                  3
-                </div>
-                <div>
-                  <p className="font-semibold text-white">Select Default Input Method</p>
-                  <p className="text-[11px] text-slate-400">Tap <b>Current Keyboard</b> and choose <b>Text Q Board</b>. Enjoy cyber cyan typing!</p>
-                </div>
+                <button
+                  onClick={() => showAndroidInputMethodPicker()}
+                  className="px-2.5 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold text-[11px] shrink-0 active:scale-95"
+                >
+                  Select
+                </button>
               </div>
             </div>
           </div>

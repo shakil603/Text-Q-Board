@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<input-method xmlns:android="http://schemas.android.com/apk/res/android"
+    android:settingsActivity="com.textqboard.app.MainActivity"
+    android:supportsSwitchingToNextInputMethod="true">
+    <subtype
+        android:label="বাংলা (Phonetic)"
+        android:imeSubtypeLocale="bn_BD"
+        android:imeSubtypeMode="keyboard" />
+    <subtype
+        android:label="English (US)"
+        android:imeSubtypeLocale="en_US"
+        android:imeSubtypeMode="keyboard" />
+    <subtype
+        android:label="বাংলা (জাতীয়)"
+        android:imeSubtypeLocale="bn_IN"
+        android:imeSubtypeMode="keyboard" />
+    <subtype
+        android:label="Español"
+        android:imeSubtypeLocale="es_ES"
+        android:imeSubtypeMode="keyboard" />
+    <subtype
+        android:label="العربية"
+        android:imeSubtypeLocale="ar_SA"
+        android:imeSubtypeMode="keyboard" />
+    <subtype
+        android:label="हिन्दी"
+        android:imeSubtypeLocale="hi_IN"
+        android:imeSubtypeMode="keyboard" />
+</input-method>

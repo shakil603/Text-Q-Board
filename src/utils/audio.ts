@@ -2,6 +2,8 @@
  * Web Audio API synthesizer for realistic Android keyboard sounds & haptics
  */
 
+import { imePlayKeySound, imeVibrate } from './androidBridge';
+
 class SoundEngine {
   private ctx: AudioContext | null = null;
 
@@ -19,6 +21,7 @@ class SoundEngine {
 
   playKeyClick(type: 'standard' | 'space' | 'backspace' | 'enter' | 'special' = 'standard', volume: number = 0.5) {
     if (volume <= 0) return;
+    imePlayKeySound();
     try {
       this.initCtx();
       if (!this.ctx) return;
@@ -110,6 +113,7 @@ class SoundEngine {
   }
 
   triggerHaptic(durationMs: number = 10) {
+    imeVibrate(durationMs);
     if (typeof window !== 'undefined' && 'navigator' in window && navigator.vibrate) {
       try {
         navigator.vibrate(durationMs);

@@ -24,11 +24,13 @@ import {
 import { getLayoutForLanguage, NUMBER_ROW_KEYS, SYMBOLS_1_LAYOUT, SYMBOLS_2_LAYOUT } from '../data/layouts';
 import { soundEngine } from '../utils/audio';
 import { matchGlideGesture } from '../utils/dictionary';
+import { showAndroidInputMethodPicker } from '../utils/androidBridge';
 
 interface KeyboardProps {
   settings: KeyboardSettings;
   theme: ThemeConfig;
   onInsertText: (char: string) => void;
+  onSpacebar?: () => void;
   onDeleteText: (count?: number) => void;
   onEnter: () => void;
   onMoveCursor: (direction: 'left' | 'right') => void;
@@ -40,10 +42,24 @@ interface KeyboardProps {
   onToggleOneHanded: (side: 'left' | 'right' | 'off') => void;
 }
 
+const LANGUAGE_LABELS: Record<string, string> = {
+  en_us: 'English (US)',
+  bn_phonetic: 'বাংলা (ফোনেটিক)',
+  bn_jatiya: 'বাংলা (জাতীয়)',
+  bn_probhat: 'বাংলা (प्रभात)',
+  es_es: 'Español',
+  fr_fr: 'Français',
+  de_de: 'Deutsch',
+  ar_sa: 'العربية',
+  hi_in: 'हिन्दी',
+  ru_ru: 'Русский',
+};
+
 export const Keyboard: React.FC<KeyboardProps> = ({
   settings,
   theme,
   onInsertText,
+  onSpacebar,
   onDeleteText,
   onEnter,
   onMoveCursor,
@@ -168,7 +184,11 @@ export const Keyboard: React.FC<KeyboardProps> = ({
 
       case 'space':
         soundEngine.playKeyClick('space', settings.soundOnKeypress ? settings.soundVolume : 0);
-        onInsertText(' ');
+        if (onSpacebar) {
+          onSpacebar();
+        } else {
+          onInsertText(' ');
+        }
         break;
 
       case 'symbols':
@@ -219,6 +239,19 @@ export const Keyboard: React.FC<KeyboardProps> = ({
     if (key.type === 'backspace' && settings.gestureDelete) {
       isDraggingBackspaceRef.current = true;
       backspaceStartXRef.current = e.clientX;
+    }
+
+    // Long press on Globe key opens Android Input Method Picker
+    if (key.type === 'globe') {
+      longPressTimerRef.current = setTimeout(() => {
+        isLongPressTriggeredRef.current = true;
+        if (settings.hapticFeedback) soundEngine.triggerHaptic(20);
+        const opened = showAndroidInputMethodPicker();
+        if (!opened) {
+          onOpenSettings();
+        }
+      }, settings.longPressDelay || 350);
+      return;
     }
 
     // Long press for popup characters / numbers
@@ -519,8 +552,8 @@ export const Keyboard: React.FC<KeyboardProps> = ({
                   ) : key.type === 'globe' ? (
                     <Globe className="w-4 h-4 text-cyan-300" />
                   ) : isSpace ? (
-                    <div className="flex items-center gap-1 text-xs text-slate-400/80 font-normal">
-                      <span>{displayPrimary}</span>
+                    <div className="flex items-center gap-1 text-xs text-slate-300/90 font-medium tracking-wide">
+                      <span>{LANGUAGE_LABELS[settings.activeLanguage] || displayPrimary}</span>
                     </div>
                   ) : (
                     <span className="text-base font-medium">{displayPrimary}</span>
@@ -555,7 +588,13 @@ export const Keyboard: React.FC<KeyboardProps> = ({
               key={char}
               onClick={(e) => {
                 e.stopPropagation();
-                onInsertText(char);
+                if (char === '⚙️') {
+                  onOpenSettings();
+                } else if (char === '😊') {
+                  onOpenEmojiPanel();
+                } else {
+                  onInsertText(char);
+                }
                 setPopupKey(null);
                 soundEngine.playKeyClick('standard', settings.soundOnKeypress ? settings.soundVolume : 0);
               }}
